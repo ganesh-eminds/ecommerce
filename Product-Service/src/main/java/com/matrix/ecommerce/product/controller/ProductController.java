@@ -35,8 +35,12 @@ public class ProductController {
     }
 
     @GetMapping("/{productId}")
-    public ResponseEntity<Product> getProductById(@PathVariable UUID productId) {
+    public ResponseEntity<Object> getProductById(@PathVariable UUID productId) {
+        // Validate the productId
         Product product = productService.getProductById(productId);
+        if (product == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
+        }
         return ResponseEntity.ok(product);
     }
 
@@ -44,6 +48,11 @@ public class ProductController {
     public ResponseEntity<Product> updateProduct(@PathVariable UUID productId, @RequestBody Product product) {
         Product updatedProduct = productService.updateProduct(productId, product);
         return ResponseEntity.ok(updatedProduct);
+    }
+    // product stock availability check
+    @GetMapping("/check-stock/{productId}")
+    public ResponseEntity<Integer> checkProductStock(@PathVariable UUID productId) {
+        return ResponseEntity.ok(productService.checkProductStock(productId));
     }
 /*
     @Operation(summary = "Upload product with PDF and image", description = "Uploads a product with a PDF file and an image. Extracts PDF text into the description field and stores image path.")

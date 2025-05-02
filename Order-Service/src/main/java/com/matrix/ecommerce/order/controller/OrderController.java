@@ -19,7 +19,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Order> createOrder(@RequestBody OrderRequestDto orderRequestDto) {
-        return ResponseEntity.ok(orderService.createOrder(orderRequestDto));
+        return orderService.createOrder(orderRequestDto);
     }
 
     // get all products
