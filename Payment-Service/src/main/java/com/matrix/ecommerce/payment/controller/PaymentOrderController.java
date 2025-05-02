@@ -16,20 +16,19 @@ public class PaymentOrderController {
     @Autowired
     private PaymentOrderService paymentOrderService;
 
+    @GetMapping("/all")
+    public ResponseEntity<List<PaymentOrderRequest>> getAllPayments() {
+        return ResponseEntity.ok(paymentOrderService.getAllOrderPayments());
+    }
 
-@GetMapping("/all")
-public ResponseEntity<List<PaymentOrderRequest>> getAllPayments() {
-    return ResponseEntity.ok(paymentOrderService.getAllOrderPayments());
-}
+    @GetMapping("/{orderId}")
+    public ResponseEntity<PaymentOrderRequest> getPaymentById(@PathVariable UUID orderId) {
+        return ResponseEntity.ok(paymentOrderService.getPaymentByOrderId(orderId));
+    }
 
-@GetMapping("/{orderId}")
-public ResponseEntity<PaymentOrderRequest> getPaymentById(@PathVariable UUID orderId) {
-    return ResponseEntity.ok(paymentOrderService.getPaymentByOrderId(orderId));
-}
-
-@GetMapping("/create")
-public ResponseEntity<String> createPayment(@PathVariable UUID orderId) {
-    paymentOrderService.createPayment(orderId);
-    return ResponseEntity.ok("Payment created successfully");
-}
+    @GetMapping("/create")
+    public ResponseEntity<String> createPayment(@PathVariable UUID orderId) {
+        paymentOrderService.createPayment(orderId);
+        return ResponseEntity.ok("Payment created successfully");
+    }
 }

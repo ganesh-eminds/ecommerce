@@ -1,9 +1,9 @@
 package com.matrix.ecommerce.product.listener;
 
-import com.matrix.ecommerce.dtos.dto.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.ProductUpdateFailedEvent;
 import com.matrix.ecommerce.dtos.dto.ProductUpdatedEvent;
 import com.matrix.ecommerce.dtos.dto.RestoreProductEvent;
+import com.matrix.ecommerce.dtos.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.product.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.repository.PaymentOrderRepository;

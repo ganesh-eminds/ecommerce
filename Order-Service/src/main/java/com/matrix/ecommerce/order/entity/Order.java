@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.order.entity;
 
+import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,7 +21,7 @@ public class Order {
     private UUID productId;
     private int quantity;
 
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
