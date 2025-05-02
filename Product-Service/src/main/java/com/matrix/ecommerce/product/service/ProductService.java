@@ -74,15 +74,10 @@ public class ProductService {
     }
 
     public List<Product> fallbackGetAllProducts(Exception e) {
-        // Fallback logic, e.g., return an mock list or a cached version of the products
-/*
+        // return list using product builder
         return List.of(
-                new Product(UUID.randomUUID(), UUID.randomUUID(),"Fallback Product 1","", 0.0, 0, List.of("DIWALI-SALE"), "")
-        );
-*/
-        return List.of(
-                new Product(UUID.randomUUID(), "TV", 100.0, 200),
-                new Product(UUID.randomUUID(), "Mobile", 50.0, 150)
+                Product.builder().name("Fallback Mobile").price(100.0).stock(100).imageUrl("/imagePath").build(),
+                Product.builder().name("Fallback TV").price(200.0).stock(200).imageUrl("/imagePath").build()
         );
     }
 
