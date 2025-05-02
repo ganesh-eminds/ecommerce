@@ -59,8 +59,7 @@ public class ProductService {
     }
 
     public Product getProductById(UUID productId) {
-        return productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+        return productRepository.findById(productId).orElse(null);
     }
 
     public Product updateProduct(UUID productId, Product product) {
@@ -85,6 +84,11 @@ public class ProductService {
                 new Product(UUID.randomUUID(), "TV", 100.0, 200),
                 new Product(UUID.randomUUID(), "Mobile", 50.0, 150)
         );
+    }
+
+    public int checkProductStock(UUID productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found")).getStock();
     }
 
 /*
