@@ -1,5 +1,6 @@
-package com.matrix.ecommerce.dtos.dto;
+package com.matrix.ecommerce.dtos.dto.order;
 
+import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,5 +14,5 @@ public class OrderCreatedEvent {
     private UUID orderId;
     private UUID productId;
     private int quantity;
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 }

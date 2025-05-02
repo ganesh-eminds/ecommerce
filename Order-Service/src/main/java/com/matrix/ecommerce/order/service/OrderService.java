@@ -1,8 +1,8 @@
 package com.matrix.ecommerce.order.service;
 
-import com.matrix.ecommerce.dtos.dto.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.exception.ExceptionDto;
 import com.matrix.ecommerce.dtos.dto.exception.ValidationException;
+import com.matrix.ecommerce.dtos.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.payment.PaymentTimeoutEvent;
 import com.matrix.ecommerce.order.dto.OrderRequestDto;
 import com.matrix.ecommerce.order.entity.Order;
@@ -18,7 +18,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static com.matrix.ecommerce.dtos.util.ErrorCodes.PRODUCT_OUT_OF_STOCK;
 import static com.matrix.ecommerce.dtos.util.ErrorCodes.PRODUCT_OUT_OF_STOCK_STATUS;
