@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.product.controller;
 
+import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,9 +53,13 @@ public class ProductController {
         return ResponseEntity.ok(updatedProduct);
     }
     // product stock availability check
-    @GetMapping("/check-stock/{productId}")
-    public ResponseEntity<Integer> checkProductStock(@PathVariable UUID productId) {
-        return ResponseEntity.ok(productService.checkProductStock(productId));
+    @GetMapping("/check-stock")
+    public List<ProductDetails> checkProductStock(@RequestBody List<UUID> productIds) {
+        // Validate the productIds
+        if (productIds == null || productIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return productService.checkProductStock(productIds);
     }
 /*
     @Operation(summary = "Upload product with PDF and image", description = "Uploads a product with a PDF file and an image. Extracts PDF text into the description field and stores image path.")

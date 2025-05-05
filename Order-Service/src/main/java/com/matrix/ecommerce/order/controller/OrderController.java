@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.order.controller;
 
+import com.matrix.ecommerce.order.dto.OrderRequest;
 import com.matrix.ecommerce.order.dto.OrderRequestDto;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.service.OrderService;
@@ -18,8 +19,8 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequestDto orderRequestDto) {
-        return orderService.createOrder(orderRequestDto);
+    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest) {
+        return orderService.placeOrder(orderRequest);
     }
 
     // get all products

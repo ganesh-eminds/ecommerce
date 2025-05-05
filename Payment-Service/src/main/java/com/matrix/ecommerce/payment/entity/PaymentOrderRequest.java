@@ -14,7 +14,6 @@ import java.util.UUID;
 @Entity
 public class PaymentOrderRequest {
     @Id
-    @Generated
     private UUID orderId;
     private double amount;
     private String paymentStatus;

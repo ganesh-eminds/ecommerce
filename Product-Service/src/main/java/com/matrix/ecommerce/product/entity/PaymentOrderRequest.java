@@ -16,7 +16,6 @@ import java.util.UUID;
 @Entity
 public class PaymentOrderRequest {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID orderId;
     private double amount;
     private String paymentStatus;

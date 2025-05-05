@@ -4,6 +4,7 @@ import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -17,9 +18,9 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    
-    private UUID productId;
-    private int quantity;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<OrderItem> orderItems;
 
     private PaymentMethod paymentMethod;
 
