@@ -2,6 +2,7 @@ package com.matrix.ecommerce.payment.controller;
 
 import com.matrix.ecommerce.payment.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.payment.service.PaymentOrderService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/payment-orders")
 public class PaymentOrderController {
@@ -26,8 +28,9 @@ public class PaymentOrderController {
         return ResponseEntity.ok(paymentOrderService.getPaymentByOrderId(orderId));
     }
 
-    @GetMapping("/create")
-    public ResponseEntity<String> createPayment(@PathVariable UUID orderId) {
+    @PostMapping("/create")
+    public ResponseEntity<String> createPayment(@RequestBody UUID orderId) {
+        log.info("Creating payment for order ID: {}", orderId);
         paymentOrderService.createPayment(orderId);
         return ResponseEntity.ok("Payment created successfully");
     }

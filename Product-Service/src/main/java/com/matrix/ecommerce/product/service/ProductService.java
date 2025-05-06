@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.product.service;
 
+import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.repository.ProductRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -81,9 +82,14 @@ public class ProductService {
         );
     }
 
-    public int checkProductStock(UUID productId) {
-        return productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found")).getStock();
+    public List<ProductDetails> checkProductStock(List<UUID> productId) {
+        List<Product> products = productRepository.findAllById(productId);
+        return products.stream()
+                .map(product -> ProductDetails.builder()
+                        .productId(product.getId())
+                        .quantity(product.getStock())
+                        .build())
+                .toList();
     }
 
 /*
