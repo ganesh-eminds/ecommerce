@@ -18,4 +18,5 @@ public class OrderCreatedEvent {
     private UUID orderId;
     private List<ProductDetails> productDetails;
     private PaymentMethod paymentMethod;
+    private String eventType;
 }

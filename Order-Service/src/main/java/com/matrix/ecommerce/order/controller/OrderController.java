@@ -35,8 +35,8 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}")
-    public ResponseEntity<Order> updateOrder(@PathVariable UUID orderId, @RequestBody OrderRequestDto orderRequestDto) {
-        return ResponseEntity.ok(orderService.updateOrder(orderId, orderRequestDto));
+    public ResponseEntity<Order> updateOrder(@PathVariable UUID orderId, @RequestBody OrderRequest orderRequest) {
+        return ResponseEntity.ok(orderService.updateOrder(orderId, orderRequest));
     }
     // cancel the order
     @DeleteMapping("/{orderId}")

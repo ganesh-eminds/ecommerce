@@ -1,14 +1,8 @@
 package com.matrix.ecommerce.order.service;
 
-import com.matrix.ecommerce.dtos.dto.exception.ExceptionDto;
-import com.matrix.ecommerce.dtos.dto.exception.ValidationException;
 import com.matrix.ecommerce.dtos.dto.order.OrderCreatedEvent;
-import com.matrix.ecommerce.dtos.dto.payment.PaymentTimeoutEvent;
 import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
-import com.matrix.ecommerce.order.dto.InventoryEvent;
 import com.matrix.ecommerce.order.dto.OrderRequest;
-import com.matrix.ecommerce.order.dto.OrderRequestDto;
-import com.matrix.ecommerce.order.dto.ProductRequest;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.entity.OrderItem;
 import com.matrix.ecommerce.order.entity.OrderStatus;
@@ -38,44 +32,84 @@ public class OrderService {
 
     public ResponseEntity<Order> placeOrder(OrderRequest orderRequest) {
 
+        Order order = Order.builder()
+                .status(OrderStatus.PENDING)
+                .paymentMethod(orderRequest.getPaymentMethod())
+                .build();
+
+        // Map and attach OrderItems
+        Order finalOrder = order;
         List<OrderItem> orderItems = orderRequest.getProducts().stream()
                 .map(productRequest -> OrderItem.builder()
                         .productId(productRequest.getProductId())
                         .quantity(productRequest.getQuantity())
                         .price(productRequest.getPrice())
+                        .order(finalOrder) // ✅ Set parent reference
                         .build())
                 .toList();
 
-        Order order = Order.builder()
-                .orderItems(orderItems)
-                .status(OrderStatus.PENDING)
-                .paymentMethod(orderRequest.getPaymentMethod())
-                .build();
+        order.setOrderItems(orderItems); // ✅ Assign items to Order
 
-        order = orderRepository.save(order);
+        order = orderRepository.save(order); // JPA will cascade and save OrderItems
 
-        // Send Kafka event or any other post-order logic
+        // Optional: Kafka or event logic
         sendKafkaToOrderProducts(order, orderItems);
 
         return ResponseEntity.ok(order);
+    }
 
+    public static String generateKey(String prefix, String uniqueId) {
+        return prefix + "-" + uniqueId;
+    }
+
+    public int calculatePartition(String orderId, int totalPartitions) {
+        int hash = orderId.hashCode();
+        int partition = Math.abs(hash) % totalPartitions; // Ensure non-negative partition
+        return partition;
     }
 
     public void sendKafkaToOrderProducts(Order order, List<OrderItem> orderItems) {
-
-        kafkaTemplate.send("order-created", new OrderCreatedEvent(order.getId(),
+        String key = generateKey("order", UUID.randomUUID().toString());
+        int partitionNo = calculatePartition(String.valueOf(order.getId()), 10);
+        System.out.println(partitionNo);
+        kafkaTemplate.send("order-created", partitionNo, key, new OrderCreatedEvent(
+                order.getId(),
                 orderItems.stream()
                         .map(orderItem -> ProductDetails.builder()
                                 .productId(orderItem.getProductId())
                                 .quantity(orderItem.getQuantity())
                                 .price(orderItem.getPrice())
                                 .build())
-                        .toList(), order.getPaymentMethod()));
+                        .toList(),
+                order.getPaymentMethod(),
+                "order-created"
+        ));
+    }
 
-        // Send timeout message
-                //PaymentTimeoutEvent timeoutEvent = new PaymentTimeoutEvent(order.getId(), order.getOrderItems().stream()
-        //                .map(OrderItem::getProductId)
-        //                .collect(Collectors.toList()));
+    public void sendKafkaToUpdateOrderProducts(Order order, List<OrderItem> oldOrderItems, List<OrderItem> newOrderItems) {
+        List<ProductDetails> productDetails = newOrderItems.stream()
+                .map(newItem -> {
+                    OrderItem oldItem = oldOrderItems.stream()
+                            .filter(old -> old.getProductId().equals(newItem.getProductId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    int quantityDifference = newItem.getQuantity() - (oldItem != null ? oldItem.getQuantity() : 0);
+
+                    return ProductDetails.builder()
+                            .productId(newItem.getProductId())
+                            .quantity(quantityDifference)
+                            .price(newItem.getPrice())
+                            .build();
+                })
+                .toList();
+
+        kafkaTemplate.send("order-updated", new OrderCreatedEvent(
+                order.getId(),
+                productDetails,
+                order.getPaymentMethod(),
+                "order-updated"
+        ));
     }
 
     public List<Order> getAllOrders() {
@@ -87,31 +121,38 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
     }
 
-    public Order updateOrder(UUID orderId, OrderRequestDto orderRequestDto) {
-        // Fetch the existing order
+    public Order updateOrder(UUID orderId, OrderRequest orderRequest) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // Map OrderRequestDto to OrderItem
-        OrderItem orderItem = OrderItem.builder()
-                .productId(orderRequestDto.getProductId())
-                .quantity(orderRequestDto.getQuantity())
-                .price(0.0) // Set price if available in OrderRequestDto
-                .order(order)
-                .build();
+        // Store old items for comparison
+        List<OrderItem> oldOrderItems = new ArrayList<>(order.getOrderItems());
 
-        // Update the order's orderItems list
-        order.setOrderItems(List.of(orderItem));
+        // Clear old items (triggers orphan removal)
+        order.getOrderItems().clear();
+
+        // Map and set new items
+        List<OrderItem> updatedItems = orderRequest.getProducts().stream()
+                .map(productRequest -> OrderItem.builder()
+                        .productId(productRequest.getProductId())
+                        .quantity(productRequest.getQuantity())
+                        .price(productRequest.getPrice())
+                        .order(order) // set parent reference
+                        .build())
+                .toList();
+
+        order.getOrderItems().addAll(updatedItems); // safely add new items
+        order.setPaymentMethod(orderRequest.getPaymentMethod());
         order.setStatus(OrderStatus.PENDING);
 
-        // Save the updated order
-        order = orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
 
-        // Send Kafka event
-        sendKafkaToOrderProducts(order, order.getOrderItems());
+        // Send Kafka event for updated order
+        sendKafkaToUpdateOrderProducts(savedOrder, oldOrderItems, updatedItems);
 
-        return order;
+        return savedOrder;
     }
+
 
     public void cancelOrder(UUID orderId) {
         Order order = orderRepository.findById(orderId)

@@ -29,46 +29,172 @@ public class ProductEventListener {
     @Autowired
     private PaymentOrderRepository paymentOrderRepository;
 
-    @KafkaListener(topics = "order-created", groupId = "product-group")
-    public void handleOrderCreated(OrderCreatedEvent event) {
+//    @KafkaListener(topics = "order-created", groupId = "product-group")
+//    public void handleOrderCreated(OrderCreatedEvent event) {
+//
+//        log.info("Inside Product Event Listener");
+//        double totalPrice = 0.0;
+//
+//        for (ProductDetails productDetails : event.getProductDetails()) {
+//            Product product = productRepository.findById(productDetails.getProductId()).get();
+//
+//            if (product.getStock() >= productDetails.getQuantity()) {
+//                // Update stock
+//                product.setStock(product.getStock() - productDetails.getQuantity());
+//                productRepository.save(product);
+//
+//                // Calculate total price for this product
+//                totalPrice += product.getPrice() * productDetails.getQuantity();
+//
+//                log.info("Calculating the total price of the order");
+//            } else {
+//                // Send ProductUpdateFailedEvent if stock is insufficient
+//                kafkaTemplate.send("product-update-failed", new ProductUpdateFailedEvent(event.getOrderId()));
+//                log.info("Product stock update failed event");
+//                return; // Exit the method if any product fails
+//            }
+//        }
+//
+//        log.info("Calculated the total price of the order");
+//
+//        // Create and send ProductUpdatedEvent
+//        ProductUpdatedEvent productUpdatedEvent = new ProductUpdatedEvent(
+//                event.getOrderId(),
+//                totalPrice,
+//                event.getProductDetails().stream().mapToInt(ProductDetails::getQuantity).sum(),
+//                event.getPaymentMethod()
+//        );
+//        kafkaTemplate.send("product-updated", productUpdatedEvent);
+//        log.info("Sending product updated event");
+//
+//        log.info("Sending payment initiated event");
+//        // Save PaymentOrderRequest
+//        PaymentOrderRequest paymentOrderRequest = new PaymentOrderRequest(
+//                event.getOrderId(),
+//                totalPrice,
+//                "PENDING",
+//                event.getPaymentMethod()
+//        );
+//        paymentOrderRepository.save(paymentOrderRequest);
+//
+//        log.info("Updated the Product stock after receiving the order");
+//    }
 
-        log.info("Inside Product Event Listener");
+//    @KafkaListener(topics = "order-updated", groupId = "product-group")
+//    public void handleOrderUpdated(OrderCreatedEvent event) {
+//        log.info("Handling order updated event for order ID: {}", event.getOrderId());
+//
+//        double totalPrice = 0.0;
+//
+//        for (ProductDetails productDetails : event.getProductDetails()) {
+//            Product product = productRepository.findById(productDetails.getProductId())
+//                    .orElseThrow(() -> new RuntimeException("Product not found for ID: " + productDetails.getProductId()));
+//
+//            // Adjust stock based on quantity difference
+//            product.setStock(product.getStock() - productDetails.getQuantity());
+//            productRepository.save(product);
+//
+//            // Calculate total price for the updated order
+//            totalPrice += productDetails.getPrice() * productDetails.getQuantity();
+//
+//            log.info("Adjusted stock for product ID: {} by quantity: {}", productDetails.getProductId(), productDetails.getQuantity());
+//        }
+//
+//        log.info("Total price of the updated order: {}", totalPrice);
+//    }
+
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated1(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer1");
+    }
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated2(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer2");
+    }
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated3(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer3");
+    }
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated4(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer4");
+    }
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated5(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer5");
+    }
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated6(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer6");
+    }
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated7(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer7");
+    }
+
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated8(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer8");
+    }
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated9(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer9");
+    }
+    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
+    public void handleOrderCreatedOrUpdated10(OrderCreatedEvent event) {
+        handleOrderCreatedAndUpdatedEvent(event);
+        System.out.println("consumer10");
+    }
+
+    public void handleOrderCreatedAndUpdatedEvent(OrderCreatedEvent event) {
+        log.info("Handling event for order ID: {}", event.getOrderId());
+
         double totalPrice = 0.0;
 
         for (ProductDetails productDetails : event.getProductDetails()) {
-            Product product = productRepository.findById(productDetails.getProductId()).get();
+            Product product = productRepository.findById(productDetails.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Product not found for ID: " + productDetails.getProductId()));
 
-            if (product.getStock() >= productDetails.getQuantity()) {
-                // Update stock
+            // Adjust stock based on the event type
+            if ("order-created".equals(event.getEventType())) {
+                if (product.getStock() >= productDetails.getQuantity()) {
+                    log.info("Product Stock: {} {}", product.getStock(), totalPrice);
+                    product.setStock(product.getStock() - productDetails.getQuantity());
+                    totalPrice += productDetails.getPrice() * productDetails.getQuantity();
+                    log.info("Product Stock after reduce: {} {}", product.getStock(), totalPrice);
+                } else {
+                    kafkaTemplate.send("product-update-failed", new ProductUpdateFailedEvent(event.getOrderId()));
+                    log.info("Product stock update failed event");
+                    return;
+                }
+            } else if ("order-updated".equals(event.getEventType())) {
+                totalPrice = 0.0;
+                log.info("Product Stock update: {} {}", product.getStock(), totalPrice);
                 product.setStock(product.getStock() - productDetails.getQuantity());
-                productRepository.save(product);
-
-                // Calculate total price for this product
-                totalPrice += product.getPrice() * productDetails.getQuantity();
-
-                log.info("Calculating the total price of the order");
-            } else {
-                // Send ProductUpdateFailedEvent if stock is insufficient
-                kafkaTemplate.send("product-update-failed", new ProductUpdateFailedEvent(event.getOrderId()));
-                log.info("Product stock update failed event");
-                return; // Exit the method if any product fails
+                totalPrice += productDetails.getPrice() * productDetails.getQuantity();
+                log.info("Product Stock after reduce update: {} {}", product.getStock(), totalPrice);
             }
+
+            productRepository.save(product);
+
+            // Calculate total price check this tomorrow morning
+            //totalPrice += productDetails.getPrice() * productDetails.getQuantity();
+
+            log.info("Adjusted stock for product ID: {} by quantity: {}", productDetails.getProductId(), productDetails.getQuantity());
         }
 
-        log.info("Calculated the total price of the order");
+        log.info("Total price of the order: {}", totalPrice);
 
-        // Create and send ProductUpdatedEvent
-        ProductUpdatedEvent productUpdatedEvent = new ProductUpdatedEvent(
-                event.getOrderId(),
-                totalPrice,
-                event.getProductDetails().stream().mapToInt(ProductDetails::getQuantity).sum(),
-                event.getPaymentMethod()
-        );
-        kafkaTemplate.send("product-updated", productUpdatedEvent);
-        log.info("Sending product updated event");
-
-        log.info("Sending payment initiated event");
-        // Save PaymentOrderRequest
+        // Save the payment order to the repository
         PaymentOrderRequest paymentOrderRequest = new PaymentOrderRequest(
                 event.getOrderId(),
                 totalPrice,
@@ -77,7 +203,15 @@ public class ProductEventListener {
         );
         paymentOrderRepository.save(paymentOrderRequest);
 
-        log.info("Updated the Product stock after receiving the order");
+        // Send ProductUpdatedEvent for both creation and update
+        ProductUpdatedEvent productUpdatedEvent = new ProductUpdatedEvent(
+                event.getOrderId(),
+                totalPrice,
+                event.getProductDetails().stream().mapToInt(ProductDetails::getQuantity).sum(),
+                event.getPaymentMethod()
+        );
+        kafkaTemplate.send("product-updated", productUpdatedEvent);
+        log.info("Sent product updated event");
     }
 
     @KafkaListener(topics = "restore-product", groupId = "product-group")
