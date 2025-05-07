@@ -1,6 +1,9 @@
 package com.matrix.ecommerce.product.service;
 
+import com.matrix.ecommerce.dtos.dto.exception.ExceptionDto;
+import com.matrix.ecommerce.dtos.dto.exception.ValidationException;
 import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
+import com.matrix.ecommerce.product.entity.Category;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.repository.ProductRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -43,7 +46,7 @@ public class ProductService {
 
     public void restoreProductStock(UUID productId, int quantity) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("PRODUCT_NOT_FOUND","404", "BAD REQUEST", "Product Not Found")));
 
         product.setStock(product.getStock() + quantity);
         productRepository.save(product);
@@ -65,7 +68,7 @@ public class ProductService {
 
     public Product updateProduct(UUID productId, Product product) {
         Product existingProduct = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("PRODUCT_NOT_FOUND","404", "BAD REQUEST", "Product Not Found")));
 
         existingProduct.setName(product.getName());
         existingProduct.setPrice(product.getPrice());
@@ -91,6 +94,18 @@ public class ProductService {
                         .build())
                 .toList();
     }
+    public List<Product> filterProducts(String category) {
+        if (category == null || category.isEmpty()) {
+            return productRepository.findAll();
+        } else {
+            return productRepository.findByCategory(Category.valueOf(category.toUpperCase()));
+        }
+    }
+
+    public void deleteProduct(UUID productId) {
+        productRepository.deleteById(productId);
+    }
+
 
 /*
 

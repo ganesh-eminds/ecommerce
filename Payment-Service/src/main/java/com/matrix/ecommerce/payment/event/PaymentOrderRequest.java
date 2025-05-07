@@ -1,11 +1,16 @@
-package com.matrix.ecommerce.product.entity;
+package com.matrix.ecommerce.payment.event;
 
-import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
+//import com.matrix.ecommerce.user.entity.User;
+
+import com.matrix.ecommerce.dtos.dto.payment.PaymentStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
@@ -22,11 +27,4 @@ public class PaymentOrderRequest {
     private double amount;
     private String paymentStatus;
     private String paymentMethod;
-
-    public PaymentOrderRequest(UUID orderId, double amount, String paymentStatus, String paymentMethod) {
-        this.orderId = orderId;
-        this.amount = amount;
-        this.paymentStatus = paymentStatus;
-        this.paymentMethod = paymentMethod;
-    }
 }

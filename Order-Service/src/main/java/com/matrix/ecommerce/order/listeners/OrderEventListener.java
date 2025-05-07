@@ -1,6 +1,10 @@
 package com.matrix.ecommerce.order.listeners;
 
 import com.matrix.ecommerce.dtos.dto.*;
+import com.matrix.ecommerce.dtos.dto.exception.ExceptionDto;
+import com.matrix.ecommerce.dtos.dto.exception.ValidationException;
+import com.matrix.ecommerce.dtos.dto.payment.PaymentDto;
+import com.matrix.ecommerce.dtos.dto.payment.PaymentStatus;
 import com.matrix.ecommerce.dtos.dto.payment.PaymentTimeoutEvent;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.entity.OrderItem;
@@ -36,9 +40,15 @@ public class OrderEventListener {
 
     @KafkaListener(topics = "product-updated", groupId = "order-group")
     public void handleProductUpdated(ProductUpdatedEvent event) {
-        PaymentRequest paymentRequest = new PaymentRequest(event.getOrderId(), event.getTotalPrice(), "PAYMENT_PENDING", event.getPaymentMethod());
+//        PaymentRequest paymentRequest = new PaymentRequest(event.getOrderId(), event.getTotalPrice(), "PAYMENT_PENDING", event.getPaymentMethod());
+        // convert to PaymentDto
+        PaymentDto paymentDto = new PaymentDto();
+        paymentDto.setOrderId(event.getOrderId());
+        paymentDto.setPaymentMethod(event.getPaymentMethod().name());
+        paymentDto.setPaymentStatus(PaymentStatus.PENDING.name());
+
         log.info("Sending payment-initiated for order {} with total price {}", event.getOrderId(), event.getTotalPrice());
-        kafkaTemplate.send("payment-initiated", paymentRequest);
+        kafkaTemplate.send(paymentTimeoutTopic, paymentDto);
     }
 
     @KafkaListener(topics = "product-update-failed", groupId = "order-group")
@@ -65,16 +75,16 @@ public class OrderEventListener {
 
     private void updateOrderStatus(UUID event, OrderStatus orderStatus) {
         Order order = orderRepository.findById(event)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("ORDER_NOT_FOUND","404", "BAD REQUEST", "Order Not Found")));
         log.info("Updating order status for order {} to {}", event, orderStatus);
         order.setStatus(orderStatus);
         orderRepository.save(order);
     }
 
     @KafkaListener(topics = "payment-timeout", groupId = "order-group")
-    public void handlePaymentTimeout(PaymentTimeoutEvent event) {
+    public void handlePaymentTimeout(PaymentDto paymentDto) {
         long time = System.currentTimeMillis();
-        log.info("Scheduling payment timeout 600 seconds for order ID: {}", event.getOrderId());
+        log.info("Scheduling payment timeout 600 seconds for order ID: {}", paymentDto.getOrderId());
         try {
             Thread.sleep(60000);
         } catch (InterruptedException e) {
@@ -82,15 +92,19 @@ public class OrderEventListener {
         }
         log.info("Payment total schedule time: {}", System.currentTimeMillis() - time);
 
-        Optional<Order> orderOpt = orderRepository.findById(event.getOrderId());
+        Optional<Order> orderOpt = orderRepository.findById(paymentDto.getOrderId());
         if (orderOpt.isPresent()) {
             Order order = orderOpt.get();
-            if (order.getStatus() == OrderStatus.PENDING) {
+            if (order.getStatus() == OrderStatus.PENDING && order.getStatus() != OrderStatus.CANCELLED) {
                 // Update order status to CANCELLED
                 log.info("Payment timeout for order {}. Cancelling order.", order.getId());
                 order.setStatus(OrderStatus.CANCELLED);
                 orderRepository.save(order);
                 log.info("Order {} cancelled due to payment timeout", order.getId());
+/*
+                kafkaTemplate.send("payment-timedout", paymentDto);
+                log.info("Payment order request updated to TIMEOUT for order {}", order.getId());
+*/
 
                 // Send a RestoreProductEvent for each OrderItem
                 for (OrderItem orderItem : order.getOrderItems()) {

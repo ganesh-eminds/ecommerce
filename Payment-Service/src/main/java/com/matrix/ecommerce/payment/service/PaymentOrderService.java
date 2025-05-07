@@ -1,6 +1,8 @@
 package com.matrix.ecommerce.payment.service;
 
-import com.matrix.ecommerce.payment.entity.PaymentOrderRequest;
+import com.matrix.ecommerce.dtos.dto.exception.ExceptionDto;
+import com.matrix.ecommerce.dtos.dto.exception.ValidationException;
+import com.matrix.ecommerce.payment.event.PaymentOrderRequest;
 import com.matrix.ecommerce.payment.event.PaymentEventListener;
 import com.matrix.ecommerce.payment.repository.PaymentOrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ public class PaymentOrderService {
 
     public PaymentOrderRequest getPaymentByOrderId(UUID orderId) {
         return paymentOrderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with order id: " + orderId));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("PAYMENT_NOT_FOUND_WITH_ORDER_ID","404", "BAD REQUEST", "Payment Not Found with Order Id: " + orderId)));
     }
     public List<PaymentOrderRequest> getAllOrderPayments() {
         return paymentOrderRepository.findAll();
@@ -29,7 +31,7 @@ public class PaymentOrderService {
     public void createPayment(UUID orderId) {
         log.info("Creating payment for order ID: {}", orderId);
         PaymentOrderRequest paymentOrderRequest = paymentOrderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with order id: " + orderId));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("PAYMENT_NOT_FOUND_WITH_ORDER_ID","404", "BAD REQUEST", "Payment Not Found with Order Id: " + orderId)));
         paymentEventListener.handlePaymentInitiated(paymentOrderRequest);
     }
     public PaymentOrderRequest updatePayment(UUID paymentId, PaymentOrderRequest paymentRequest) {
@@ -44,7 +46,7 @@ public class PaymentOrderService {
     }
     public void deletePayment(UUID paymentId) {
         PaymentOrderRequest existingPayment = paymentOrderRepository.findById(paymentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + paymentId));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("PAYMENT_NOT_FOUND_WITH_PAYMENT_ID","404", "BAD REQUEST", "Payment Not Found with Payment Id: " + paymentId)));
 
         paymentOrderRepository.delete(existingPayment);
     }

@@ -1,14 +1,10 @@
-package com.matrix.ecommerce.payment.entity;
+package com.matrix.ecommerce.dtos.dto.payment;
 
-import com.matrix.ecommerce.dtos.dto.payment.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.Type;
-import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
@@ -18,11 +14,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Table(name = "payments")
-public class Payment {
+public class PaymentDto {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    private UUID orderId;
     private Double amount;
     private String paymentStatus;
     private String paymentMethod;

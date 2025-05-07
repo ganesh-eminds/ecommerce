@@ -1,12 +1,12 @@
 com\matrix\ecommerce\payment\event\PaymentEventListener.class
 com\matrix\ecommerce\payment\repository\PaymentOrderRepository.class
 com\matrix\ecommerce\payment\entity\Payment.class
+com\matrix\ecommerce\payment\event\PaymentOrderRequest$PaymentOrderRequestBuilder.class
 com\matrix\ecommerce\payment\PaymentServiceApplication.class
 com\matrix\ecommerce\payment\service\PaymentOrderService.class
 com\matrix\ecommerce\payment\controller\PaymentController.class
 com\matrix\ecommerce\payment\controller\PaymentOrderController.class
 com\matrix\ecommerce\payment\entity\Payment$PaymentBuilder.class
 com\matrix\ecommerce\payment\repository\PaymentRepository.class
-com\matrix\ecommerce\payment\entity\PaymentOrderRequest.class
-com\matrix\ecommerce\payment\entity\PaymentOrderRequest$PaymentOrderRequestBuilder.class
+com\matrix\ecommerce\payment\event\PaymentOrderRequest.class
 com\matrix\ecommerce\payment\service\PaymentService.class

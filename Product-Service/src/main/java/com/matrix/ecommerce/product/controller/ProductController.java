@@ -53,13 +53,26 @@ public class ProductController {
         return ResponseEntity.ok(updatedProduct);
     }
     // product stock availability check
-    @GetMapping("/check-stock")
+    @PostMapping("/check-stock")
     public List<ProductDetails> checkProductStock(@RequestBody List<UUID> productIds) {
         // Validate the productIds
         if (productIds == null || productIds.isEmpty()) {
             return new ArrayList<>();
         }
         return productService.checkProductStock(productIds);
+    }
+
+    // filter products based on category
+    @GetMapping("/filter")
+    public ResponseEntity<List<Product>> filterProducts(@RequestParam String category) {
+        List<Product> products = productService.filterProducts(category);
+        return ResponseEntity.ok(products);
+    }
+    // delete product by id
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable UUID productId) {
+        productService.deleteProduct(productId);
+        return ResponseEntity.noContent().build();
     }
 /*
     @Operation(summary = "Upload product with PDF and image", description = "Uploads a product with a PDF file and an image. Extracts PDF text into the description field and stores image path.")

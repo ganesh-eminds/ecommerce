@@ -3,6 +3,8 @@ package com.matrix.ecommerce.product.listener;
 import com.matrix.ecommerce.dtos.dto.ProductUpdateFailedEvent;
 import com.matrix.ecommerce.dtos.dto.ProductUpdatedEvent;
 import com.matrix.ecommerce.dtos.dto.RestoreProductEvent;
+import com.matrix.ecommerce.dtos.dto.exception.ExceptionDto;
+import com.matrix.ecommerce.dtos.dto.exception.ValidationException;
 import com.matrix.ecommerce.dtos.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
 import com.matrix.ecommerce.product.entity.PaymentOrderRequest;
@@ -15,6 +17,8 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @Component
 @EnableKafka
@@ -137,7 +141,7 @@ public class ProductEventListener {
 
         for (ProductDetails productDetails : event.getProductDetails()) {
             Product product = productRepository.findById(productDetails.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found for ID: " + productDetails.getProductId()));
+                    .orElseThrow(() -> new ValidationException(new ExceptionDto("PRODUCT_NOT_FOUND","404", "BAD REQUEST", "Product Not Found")));
 
             // Adjust stock based on the event type
             if ("order-created".equals(event.getEventType())) {
@@ -171,9 +175,14 @@ public class ProductEventListener {
                 event.getOrderId(),
                 totalPrice,
                 "PENDING",
-                event.getPaymentMethod()
+                event.getPaymentMethod().name()
         );
-        paymentOrderRepository.save(paymentOrderRequest);
+        try {
+            paymentOrderRepository.save(paymentOrderRequest);
+        } catch (Exception e) {
+            log.error("Error saving payment order request: {}", e.getMessage());
+            throw new RuntimeException("Failed to save payment order request");
+        }
 
         // Send ProductUpdatedEvent for both creation and update
         ProductUpdatedEvent productUpdatedEvent = new ProductUpdatedEvent(
@@ -190,7 +199,7 @@ public class ProductEventListener {
     public void handleRestoreProduct(RestoreProductEvent event) {
         log.info("Restoring product with ID: {}", event.getOrderId());
         Product product = productRepository.findById(event.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Product not found for ID: " + event.getOrderId()));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("PRODUCT_NOT_FOUND","404", "BAD REQUEST", "Product Not Found")));
 
         // Restore the stock
         product.setStock(product.getStock() + event.getQuantity());

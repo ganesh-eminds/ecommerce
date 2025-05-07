@@ -1,5 +1,7 @@
 package com.matrix.ecommerce.order.service;
 
+import com.matrix.ecommerce.dtos.dto.exception.ExceptionDto;
+import com.matrix.ecommerce.dtos.dto.exception.ValidationException;
 import com.matrix.ecommerce.dtos.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
 import com.matrix.ecommerce.order.dto.OrderRequest;
@@ -120,12 +122,12 @@ public class OrderService {
 
     public Order getOrderById(UUID orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("ORDER_NOT_FOUND","404", "BAD REQUEST", "Order Not Found")));
     }
 
     public Order updateOrder(UUID orderId, OrderRequest orderRequest) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("ORDER_NOT_FOUND","404", "BAD REQUEST", "Order Not Found")));
 
         // Store old items for comparison
         List<OrderItem> oldOrderItems = new ArrayList<>(order.getOrderItems());
@@ -157,9 +159,9 @@ public class OrderService {
 
     public void cancelOrder(UUID orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ValidationException(new ExceptionDto("ORDER_NOT_FOUND","404", "BAD REQUEST", "Order Not Found")));
         if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new RuntimeException("Order already cancelled");
+            throw new ValidationException(new ExceptionDto("ORDER_ALREADY_CANCELLED","404", "BAD REQUEST", "Order Already Cancelled"));
         }
         orderRepository.delete(order);
         log.info("Order with ID {} deleted", orderId);

@@ -1,6 +1,6 @@
 package com.matrix.ecommerce.payment.controller;
 
-import com.matrix.ecommerce.payment.entity.PaymentOrderRequest;
+import com.matrix.ecommerce.payment.event.PaymentOrderRequest;
 import com.matrix.ecommerce.payment.service.PaymentOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping("/api/payment-orders")
+@CrossOrigin(origins = "http://localhost:4200")
 public class PaymentOrderController {
 
     @Autowired

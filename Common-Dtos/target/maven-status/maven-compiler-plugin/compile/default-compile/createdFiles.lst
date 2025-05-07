@@ -29,9 +29,11 @@ com\matrix\ecommerce\dtos\dto\PaymentSuccessEvent.class
 com\matrix\ecommerce\dtos\dto\address\AddressRequestDTO.class
 com\matrix\ecommerce\dtos\dto\order\UpdateOrderStatusRequest.class
 com\matrix\ecommerce\dtos\dto\response\WishlistItemDTO.class
+com\matrix\ecommerce\dtos\dto\payment\PaymentDto.class
 com\matrix\ecommerce\dtos\dto\response\UserProfileResponseDTO.class
 com\matrix\ecommerce\dtos\dto\ProductUpdateFailedEvent.class
 com\matrix\ecommerce\dtos\dto\exception\ExceptionDto.class
+com\matrix\ecommerce\dtos\dto\payment\PaymentStatus.class
 com\matrix\ecommerce\dtos\dto\user\UpdateAddressRequest.class
 com\matrix\ecommerce\dtos\dto\order\OrderStatus.class
 com\matrix\ecommerce\dtos\dto\order\OrderResponse$OrderResponseBuilder.class
@@ -43,5 +45,6 @@ com\matrix\ecommerce\dtos\dto\order\CreateOrderRequest.class
 com\matrix\ecommerce\dtos\dto\address\AddressResponseDTO.class
 com\matrix\ecommerce\dtos\dto\exception\ValidationException.class
 com\matrix\ecommerce\dtos\dto\user\UserUpdateRequestDTO.class
+com\matrix\ecommerce\dtos\dto\payment\PaymentDto$PaymentDtoBuilder.class
 com\matrix\ecommerce\dtos\dto\payment\PaymentTimeoutEvent.class
 com\matrix\ecommerce\dtos\dto\card\CardRequest.class
