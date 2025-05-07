@@ -44,11 +44,11 @@ public class OrderService {
                         .productId(productRequest.getProductId())
                         .quantity(productRequest.getQuantity())
                         .price(productRequest.getPrice())
-                        .order(finalOrder) // ✅ Set parent reference
+                        .order(finalOrder)
                         .build())
                 .toList();
 
-        order.setOrderItems(orderItems); // ✅ Assign items to Order
+        order.setOrderItems(orderItems);
 
         order = orderRepository.save(order); // JPA will cascade and save OrderItems
 
@@ -62,17 +62,18 @@ public class OrderService {
         return prefix + "-" + uniqueId;
     }
 
-    public int calculatePartition(String orderId, int totalPartitions) {
-        int hash = orderId.hashCode();
-        int partition = Math.abs(hash) % totalPartitions; // Ensure non-negative partition
-        return partition;
+    public int calculatePartition(String productId, int totalPartitions) {
+        int hash = productId.hashCode();
+        return Math.abs(hash) % totalPartitions;
     }
 
     public void sendKafkaToOrderProducts(Order order, List<OrderItem> orderItems) {
+
         String key = generateKey("order", UUID.randomUUID().toString());
-        int partitionNo = calculatePartition(String.valueOf(order.getId()), 10);
-        System.out.println(partitionNo);
-        kafkaTemplate.send("order-created", partitionNo, key, new OrderCreatedEvent(
+
+        int partitionNo = calculatePartition(String.valueOf(orderItems.get(0).getProductId()), 10);
+
+        kafkaTemplate.send("order-created", Integer.valueOf(partitionNo), key, new OrderCreatedEvent(
                 order.getId(),
                 orderItems.stream()
                         .map(orderItem -> ProductDetails.builder()
@@ -87,6 +88,7 @@ public class OrderService {
     }
 
     public void sendKafkaToUpdateOrderProducts(Order order, List<OrderItem> oldOrderItems, List<OrderItem> newOrderItems) {
+
         List<ProductDetails> productDetails = newOrderItems.stream()
                 .map(newItem -> {
                     OrderItem oldItem = oldOrderItems.stream()
@@ -98,7 +100,7 @@ public class OrderService {
 
                     return ProductDetails.builder()
                             .productId(newItem.getProductId())
-                            .quantity(quantityDifference)
+                            .quantity(Integer.valueOf(quantityDifference))
                             .price(newItem.getPrice())
                             .build();
                 })
@@ -152,7 +154,6 @@ public class OrderService {
 
         return savedOrder;
     }
-
 
     public void cancelOrder(UUID orderId) {
         Order order = orderRepository.findById(orderId)
