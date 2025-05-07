@@ -1,0 +1,83 @@
+_format_version: "3.0"
+
+services:
+  - name: product-service
+    url: http://product-service:8081
+    routes:
+      - name: product-route
+        paths:
+          - /products-app
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 10
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - Origin
+          credentials: true
+
+  - name: order-service
+    url: http://order-service:8082
+    routes:
+      - name: order-route
+        paths:
+          - /orders-app
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 10
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - Origin
+          credentials: true
+
+  - name: payment-service
+    url: http://payment-service:8083
+    routes:
+      - name: payment-route
+        paths:
+          - /payments-app
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 80
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - Origin
+          credentials: true

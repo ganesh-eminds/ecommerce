@@ -90,50 +90,35 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
 
-
-  kong-db:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: kong
-      POSTGRES_DB: kong
-      POSTGRES_PASSWORD: pass
-    ports:
-      - "5433:5432"  # Avoid conflict with main postgres
-
-  kong-migrations:
-    image: kong:3.5
-    command: kong migrations bootstrap
-    depends_on:
-      - kong-db
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: kong-db
-      KONG_PG_PASSWORD: pass
-
   kong:
-    image: kong:3.5
-    restart: always
-    depends_on:
-      - kong-db
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: kong-db
-      KONG_PG_PASSWORD: pass
-      KONG_PROXY_ACCESS_LOG: /dev/stdout
-      KONG_ADMIN_ACCESS_LOG: /dev/stdout
-      KONG_PROXY_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    image: kong:latest
+    container_name: kong
     ports:
       - "8000:8000"
+      - "8443:8443"
       - "8001:8001"
+      - "8444:8444"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: "/kong-config/kong.yml"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+    volumes:
+      - ./kong-config:/kong-config
+    depends_on:
+      - kafka
+      - zookeeper
+      - eureka-server
+      - order-service
+      - payment-service
+      - product-service
 
   konga:
     image: pantsel/konga:latest
+    container_name: konga
     ports:
-      - "8002:1337"
+      - "1337:1337" # Konga UI
     environment:
-      - NODE_ENV=development
+      NODE_ENV: "production"
+      KONG_ADMIN_URL: "http://kong:8001" # Kong Admin API URL
     depends_on:
-      - eureka-server
       - kong

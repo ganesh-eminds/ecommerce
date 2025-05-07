@@ -27,6 +27,15 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.trusted.packages: '*'
+
+    listener:
+      retry:
+        max-attempts: 5
+      backoff:
+        initial-interval: 1000
+        multiplier: 2.0
+        max-interval: 10000
+
 eureka:
   client:
     service-url:

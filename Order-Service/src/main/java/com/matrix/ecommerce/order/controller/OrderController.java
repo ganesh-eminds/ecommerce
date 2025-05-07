@@ -4,6 +4,7 @@ import com.matrix.ecommerce.order.dto.OrderRequest;
 import com.matrix.ecommerce.order.dto.OrderRequestDto;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<Order> createOrder(@RequestBody @Valid OrderRequest orderRequest) {
         return orderService.placeOrder(orderRequest);
     }
 
@@ -35,10 +36,10 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}")
-    public ResponseEntity<Order> updateOrder(@PathVariable UUID orderId, @RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<Order> updateOrder(@PathVariable UUID orderId, @RequestBody @Valid OrderRequest orderRequest) {
         return ResponseEntity.ok(orderService.updateOrder(orderId, orderRequest));
     }
-    // cancel the order
+
     @DeleteMapping("/{orderId}")
     public ResponseEntity<String> cancelOrder(@PathVariable UUID orderId) {
         orderService.cancelOrder(orderId);
