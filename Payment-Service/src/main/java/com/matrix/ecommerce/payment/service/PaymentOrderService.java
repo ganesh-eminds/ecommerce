@@ -23,15 +23,20 @@ public class PaymentOrderService {
         return paymentOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with order id: " + orderId));
     }
+
     public List<PaymentOrderRequest> getAllOrderPayments() {
         return paymentOrderRepository.findAll();
     }
+
     public void createPayment(UUID orderId) {
         log.info("Creating payment for order ID: {}", orderId);
         PaymentOrderRequest paymentOrderRequest = paymentOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with order id: " + orderId));
         paymentEventListener.handlePaymentInitiated(paymentOrderRequest);
+        paymentOrderRequest.setPaymentStatus("COMPLETED");
+        paymentOrderRepository.save(paymentOrderRequest);
     }
+
     public PaymentOrderRequest updatePayment(UUID paymentId, PaymentOrderRequest paymentRequest) {
         PaymentOrderRequest existingPayment = paymentOrderRepository.findById(paymentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + paymentId));
