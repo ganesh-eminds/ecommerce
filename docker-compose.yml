@@ -90,35 +90,35 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
 
-  kong:
-    image: kong:latest
-    container_name: kong
-    ports:
-      - "8000:8000"
-      - "8443:8443"
-      - "8001:8001"
-      - "8444:8444"
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: "/kong-config/kong.yml"
-      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
-    volumes:
-      - ./kong-config:/kong-config
-    depends_on:
-      - kafka
-      - zookeeper
-      - eureka-server
-      - order-service
-      - payment-service
-      - product-service
-
-  konga:
-    image: pantsel/konga:latest
-    container_name: konga
-    ports:
-      - "1337:1337" # Konga UI
-    environment:
-      NODE_ENV: "production"
-      KONG_ADMIN_URL: "http://kong:8001" # Kong Admin API URL
-    depends_on:
-      - kong
+#  kong:
+#    image: kong:latest
+#    container_name: kong
+#    ports:
+#      - "8000:8000"
+#      - "8443:8443"
+#      - "8001:8001"
+#      - "8444:8444"
+#    environment:
+#      KONG_DATABASE: "off"
+#      KONG_DECLARATIVE_CONFIG: "/kong-config/kong.yml"
+#      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+#    volumes:
+#      - ./kong-config:/kong-config
+#    depends_on:
+#      - kafka
+#      - zookeeper
+#      - eureka-server
+#      - order-service
+#      - payment-service
+#      - product-service
+#
+#  konga:
+#    image: pantsel/konga:latest
+#    container_name: konga
+#    ports:
+#      - "1337:1337" # Konga UI
+#    environment:
+#      NODE_ENV: "production"
+#      KONG_ADMIN_URL: "http://kong:8001" # Kong Admin API URL
+#    depends_on:
+#      - kong

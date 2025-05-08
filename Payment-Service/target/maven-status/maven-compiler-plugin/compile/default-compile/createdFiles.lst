@@ -5,8 +5,10 @@ com\matrix\ecommerce\payment\PaymentServiceApplication.class
 com\matrix\ecommerce\payment\service\PaymentOrderService.class
 com\matrix\ecommerce\payment\controller\PaymentController.class
 com\matrix\ecommerce\payment\controller\PaymentOrderController.class
+com\matrix\ecommerce\payment\dto\PayOrderRequest.class
 com\matrix\ecommerce\payment\entity\Payment$PaymentBuilder.class
 com\matrix\ecommerce\payment\repository\PaymentRepository.class
 com\matrix\ecommerce\payment\entity\PaymentOrderRequest.class
 com\matrix\ecommerce\payment\entity\PaymentOrderRequest$PaymentOrderRequestBuilder.class
+com\matrix\ecommerce\payment\dto\PayOrderRequest$PayOrderRequestBuilder.class
 com\matrix\ecommerce\payment\service\PaymentService.class

@@ -71,39 +71,39 @@ public class OrderEventListener {
         orderRepository.save(order);
     }
 
-    @KafkaListener(topics = "payment-timeout", groupId = "order-group")
-    public void handlePaymentTimeout(PaymentTimeoutEvent event) {
-        long time = System.currentTimeMillis();
-        log.info("Scheduling payment timeout 600 seconds for order ID: {}", event.getOrderId());
-        try {
-            Thread.sleep(60000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        log.info("Payment total schedule time: {}", System.currentTimeMillis() - time);
-
-        Optional<Order> orderOpt = orderRepository.findById(event.getOrderId());
-        if (orderOpt.isPresent()) {
-            Order order = orderOpt.get();
-            if (order.getStatus() == OrderStatus.PENDING) {
-                // Update order status to CANCELLED
-                log.info("Payment timeout for order {}. Cancelling order.", order.getId());
-                order.setStatus(OrderStatus.CANCELLED);
-                orderRepository.save(order);
-                log.info("Order {} cancelled due to payment timeout", order.getId());
-
-                // Send a RestoreProductEvent for each OrderItem
-                for (OrderItem orderItem : order.getOrderItems()) {
-                    RestoreProductEvent restoreProductEvent = new RestoreProductEvent(
-                            orderItem.getProductId(),
-                            orderItem.getQuantity()
-                    );
-                    kafkaTemplate.send(restoreProductTopic, restoreProductEvent);
-                    log.info("Product restored for product ID: {}", orderItem.getProductId());
-                }
-            }
-        }
-    }
+    //@KafkaListener(topics = "payment-timeout", groupId = "order-group")
+//    public void handlePaymentTimeout(PaymentTimeoutEvent event) {
+//        long time = System.currentTimeMillis();
+//        log.info("Scheduling payment timeout 600 seconds for order ID: {}", event.getOrderId());
+//        try {
+//            Thread.sleep(60000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        log.info("Payment total schedule time: {}", System.currentTimeMillis() - time);
+//
+//        Optional<Order> orderOpt = orderRepository.findById(event.getOrderId());
+//        if (orderOpt.isPresent()) {
+//            Order order = orderOpt.get();
+//            if (order.getStatus() == OrderStatus.PENDING) {
+//                // Update order status to CANCELLED
+//                log.info("Payment timeout for order {}. Cancelling order.", order.getId());
+//                order.setStatus(OrderStatus.CANCELLED);
+//                orderRepository.save(order);
+//                log.info("Order {} cancelled due to payment timeout", order.getId());
+//
+//                // Send a RestoreProductEvent for each OrderItem
+//                for (OrderItem orderItem : order.getOrderItems()) {
+//                    RestoreProductEvent restoreProductEvent = new RestoreProductEvent(
+//                            orderItem.getProductId(),
+//                            orderItem.getQuantity()
+//                    );
+//                    kafkaTemplate.send(restoreProductTopic, restoreProductEvent);
+//                    log.info("Product restored for product ID: {}", orderItem.getProductId());
+//                }
+//            }
+//        }
+//    }
 
 //    @KafkaListener(topics = "payment-timeout", groupId = "order-group")
 //    public void handlePaymentTimeout(PaymentTimeoutEvent event) {

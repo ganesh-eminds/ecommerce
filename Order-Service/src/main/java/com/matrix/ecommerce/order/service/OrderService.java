@@ -1,6 +1,8 @@
 package com.matrix.ecommerce.order.service;
 
+import com.matrix.ecommerce.dtos.dto.RestoreProductEvent;
 import com.matrix.ecommerce.dtos.dto.order.OrderCreatedEvent;
+import com.matrix.ecommerce.dtos.dto.payment.PaymentTimeoutEvent;
 import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
 import com.matrix.ecommerce.order.dto.OrderRequest;
 import com.matrix.ecommerce.order.entity.Order;
@@ -11,13 +13,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +36,13 @@ public class OrderService {
     private final ScheduledExecutorService scheduledExecutorService = java.util.concurrent.Executors.newScheduledThreadPool(5);
     private final RestTemplate restTemplate;
 
+
     public ResponseEntity<Order> placeOrder(OrderRequest orderRequest) {
 
         Order order = Order.builder()
                 .status(OrderStatus.PENDING)
                 .paymentMethod(orderRequest.getPaymentMethod())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         // Map and attach OrderItems
@@ -50,10 +58,16 @@ public class OrderService {
 
         order.setOrderItems(orderItems);
 
-        order = orderRepository.save(order); // JPA will cascade and save OrderItems
+        order = orderRepository.save(order);
 
-        // Optional: Kafka or event logic
+        // Schedule a timeout task for payment
+//        log.info("Scheduling payment timeout for order ID: {}", order.getId());
+//        UUID orderId = order.getId();
+//        scheduledExecutorService.schedule(() -> handlePaymentTimeout(new PaymentTimeoutEvent(orderId)), 60, TimeUnit.SECONDS);
+//        log.info("Payment timeout scheduled for order ID: {}", order.getId());
+
         sendKafkaToOrderProducts(order, orderItems);
+        log.info("Kafka message sent for order creation with ID {}", order.getId());
 
         return ResponseEntity.ok(order);
     }
@@ -167,4 +181,32 @@ public class OrderService {
         kafkaTemplate.send("restore-product", orderId);
         log.info("Kafka message sent for order deletion with ID {}", orderId);
     }
+
+//    @Scheduled(fixedRate = 30000)
+//    public void handlePaymentTimeout(PaymentTimeoutEvent event) {
+//
+//        log.info("Handling payment timeout for order ID: {}", event.getOrderId());
+//
+//        Optional<Order> orderOpt = orderRepository.findById(event.getOrderId());
+//        if (orderOpt.isPresent()) {
+//            Order order = orderOpt.get();
+//            if (order.getStatus() == OrderStatus.PENDING) {
+//                // Update order status to CANCELLED
+//                log.info("Payment timeout for order {}. Cancelling order.", order.getId());
+//                order.setStatus(OrderStatus.CANCELLED);
+//                orderRepository.save(order);
+//                log.info("Order {} cancelled due to payment timeout", order.getId());
+//
+//                // Send a RestoreProductEvent for each OrderItem
+//                for (OrderItem orderItem : order.getOrderItems()) {
+//                    RestoreProductEvent restoreProductEvent = new RestoreProductEvent(
+//                            orderItem.getProductId(),
+//                            orderItem.getQuantity()
+//                    );
+//                    kafkaTemplate.send("restore-product", restoreProductEvent);
+//                    log.info("Product restored for product ID: {}", orderItem.getProductId());
+//                }
+//            }
+//        }
+//    }
 }

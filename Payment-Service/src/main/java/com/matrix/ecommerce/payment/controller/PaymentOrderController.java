@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.payment.controller;
 
+import com.matrix.ecommerce.payment.dto.PayOrderRequest;
 import com.matrix.ecommerce.payment.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.payment.service.PaymentOrderService;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +30,9 @@ public class PaymentOrderController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> createPayment(@RequestBody UUID orderId) {
-        log.info("Creating payment for order ID: {}", orderId);
-        paymentOrderService.createPayment(orderId);
+    public ResponseEntity<String> createPayment(@RequestBody PayOrderRequest payOrderRequest) {
+        log.info("Creating payment for order ID: {}", payOrderRequest.getOrderId());
+        paymentOrderService.createPayment(UUID.fromString(String.valueOf(payOrderRequest.getOrderId())));
         return ResponseEntity.ok("Payment created successfully");
     }
 }
