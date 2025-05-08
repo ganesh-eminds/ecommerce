@@ -11,7 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -85,19 +87,23 @@ public class ProductController {
         }
         return productService.checkProductStock(productIds);
     }
-
-    /*
-    @Operation(summary = "Upload product with PDF and image", description = "Uploads a product with a PDF file and an image. Extracts PDF text into the description field and stores image path.")
-    @ApiResponse(responseCode = "201", description = "Product uploaded successfully")
-    @PostMapping(value = "/upload", consumes = "multipart/form-data")
-    public ResponseEntity<Product> addProductWithPdfAndImage(
-            @RequestParam("name") String name,
-            @RequestParam("price") Double price,
-            @RequestParam("stock") Integer stock,
-            @RequestParam("pdf") MultipartFile pdfFile,
-            @RequestParam("image") MultipartFile imageFile) throws IOException {
-        Product product = productService.addProductWithPdfAndImage(name, price, stock, pdfFile, imageFile);
-        return ResponseEntity.status(HttpStatus.CREATED).body(product);
+    @Operation(
+            summary = "Upload product from PDF",
+            description = "Uploads a product by extracting details (name, price, stock, image URL) from the provided PDF file."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Product created successfully from PDF"),
+            @ApiResponse(responseCode = "400", description = "Invalid PDF file format")
+    })
+    @PostMapping(value = "/upload-pdf", consumes = "multipart/form-data")
+    public ResponseEntity<Product> uploadProductFromPdf(
+            @Parameter(description = "PDF file containing product details")
+            @RequestParam("pdf") MultipartFile pdfFile) {
+        try {
+            Product product = productService.createProductFromPdf(pdfFile);
+            return ResponseEntity.status(HttpStatus.CREATED).body(product);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body(null); // Handle exception properly in a real scenario
+        }
     }
-    */
 }
