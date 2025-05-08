@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.order.dto;
 
+import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,6 +22,6 @@ public class OrderRequestDto {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID productId;
     private int quantity;
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 
 }

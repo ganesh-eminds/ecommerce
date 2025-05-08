@@ -1,6 +1,7 @@
 package com.matrix.ecommerce.dtos.dto;
 
 //import com.matrix.ecommerce.user.entity.User;
+import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,5 +17,5 @@ public class PaymentRequest {
     private UUID orderId;
     private double amount;
     private String paymentStatus;
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 }

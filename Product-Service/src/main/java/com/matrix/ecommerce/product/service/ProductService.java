@@ -1,13 +1,19 @@
 package com.matrix.ecommerce.product.service;
 
+import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.repository.ProductRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,14 +23,10 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    private static final String IMAGE_UPLOAD_DIR = "uploads/images/";
-
     public Product createProduct(Product product) {
         return productRepository.save(product);
     }
 
-
-    // add some mock data through postconstruct
     @PostConstruct
     public void init() {
         Product mobile = new Product();
@@ -48,19 +50,14 @@ public class ProductService {
         productRepository.save(product);
     }
 
-    // implement circuit breaker for this method
-    @CircuitBreaker(
-            fallbackMethod = "fallbackGetAllProducts",
-            name = "product-service"
-    )
+    @CircuitBreaker(fallbackMethod = "fallbackGetAllProducts", name = "product-service")
     @Retry(name = "productServiceRetry", fallbackMethod = "fallbackGetAllProducts")
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
     public Product getProductById(UUID productId) {
-        return productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+        return productRepository.findById(productId).orElse(null);
     }
 
     public Product updateProduct(UUID productId, Product product) {
@@ -75,112 +72,73 @@ public class ProductService {
     }
 
     public List<Product> fallbackGetAllProducts(Exception e) {
-        // Fallback logic, e.g., return an mock list or a cached version of the products
-/*
         return List.of(
-                new Product(UUID.randomUUID(), UUID.randomUUID(),"Fallback Product 1","", 0.0, 0, List.of("DIWALI-SALE"), "")
-        );
-*/
-        return List.of(
-                new Product(UUID.randomUUID(), "TV", 100.0, 200),
-                new Product(UUID.randomUUID(), "Mobile", 50.0, 150)
+                Product.builder().name("Fallback Mobile").price(100.0).stock(100).imageUrl("/imagePath").build(),
+                Product.builder().name("Fallback TV").price(200.0).stock(200).imageUrl("/imagePath").build()
         );
     }
 
-/*
+    public List<ProductDetails> checkProductStock(List<UUID> productId) {
+        List<Product> products = productRepository.findAllById(productId);
+        return products.stream()
+                .map(product -> ProductDetails.builder()
+                        .productId(product.getId())
+                        .quantity(product.getStock())
+                        .build())
+                .toList();
+    }
 
-    public Product addProductWithPdfAndImage(String name, Double price, Integer quantity, MultipartFile pdfFile, MultipartFile imageFile) throws IOException {
-        String fullText = extractTextFromPdf(pdfFile);
+    public Product createProductFromPdf(MultipartFile file) throws IOException {
+        // Convert MultipartFile to File
+        File tempFile = convertMultipartFileToFile(file);
 
-        String description = extractDescription(fullText);
-        List<String> currentOffers = extractCurrentOffers(fullText);
-        String imagePath = saveImage(imageFile);
+        // Extract text from the PDF
+        String pdfText = extractTextFromPDF(tempFile);
 
-        Product product = new Product();
-        product.setProductId(UUID.randomUUID());
-        product.setName(name);
-        product.setPrice(price);
-        product.setQuantity(quantity);
-        product.setDescription(description);
-        product.setCurrentOffers(currentOffers);
-        product.setImagePath(imagePath);
+        // Parse the product information from the extracted text
+        Product product = parseProductFromText(pdfText);
 
+        // Save the product into the database
         return productRepository.save(product);
     }
 
-    private String generateProductId() {
-        return "PROD-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    private File convertMultipartFileToFile(MultipartFile file) throws IOException {
+        File tempFile = File.createTempFile("temp", file.getOriginalFilename());
+        file.transferTo(tempFile);
+        return tempFile;
     }
 
-    private String extractTextFromPdf(MultipartFile file) throws IOException {
-        try (PDDocument document = PDDocument.load(file.getInputStream())) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            return stripper.getText(document).trim();
-        }
+    private String extractTextFromPDF(File pdfFile) throws IOException {
+        PDDocument document = PDDocument.load(pdfFile);
+        PDFTextStripper stripper = new PDFTextStripper();
+        String text = stripper.getText(document);
+        document.close();
+        return text;
     }
 
-    private String extractDescription(String text) {
-        String descriptionPattern = "(?<=description:)([\\s\\S]+?)(?=Offers:|Price:|$)";
-        Pattern descriptionPatternObj = Pattern.compile(descriptionPattern, Pattern.CASE_INSENSITIVE);
-        Matcher descriptionMatcher = descriptionPatternObj.matcher(text);
+    private Product parseProductFromText(String pdfText) {
+        String[] lines = pdfText.split("\n");
+        String name = null, imageUrl = null;
+        double price = 0;
+        int stock = 0;
 
-        if (descriptionMatcher.find()) {
-            String rawDescription = descriptionMatcher.group(0).trim();
-            return rawDescription.replaceAll("\\r?\\n", " ").replaceAll("\\s+", " ").trim();
-        }
-        return "";
-    }
-
-    private List<String> extractCurrentOffers(String text) {
-        String offerPattern = "(?<=Offers:)([\\s\\S]+?)(?=Price:|$)";
-        Pattern offerPatternObj = Pattern.compile(offerPattern, Pattern.CASE_INSENSITIVE);
-        Matcher offerMatcher = offerPatternObj.matcher(text);
-
-        if (offerMatcher.find()) {
-            String offersText = offerMatcher.group(0).trim();
-
-            // Normalize line breaks
-            String[] lines = offersText.split("\\r?\\n");
-            List<String> offers = new ArrayList<>();
-
-            StringBuilder currentOffer = new StringBuilder();
-            for (String line : lines) {
-                line = line.trim();
-                if (line.isEmpty()) continue;
-
-                // If line starts with "-" or "•", treat it as a new offer
-                if (line.startsWith("-") || line.startsWith("•")) {
-                    if (currentOffer.length() > 0) {
-                        offers.add(currentOffer.toString().trim());
-                    }
-                    currentOffer = new StringBuilder(line.replaceFirst("[-•]\\s*", ""));
-                } else {
-                    currentOffer.append(" ").append(line);
-                }
+        for (String line : lines) {
+            if (line.startsWith("Name:")) {
+                name = line.substring(5).trim();
+            } else if (line.startsWith("Price:")) {
+                price = Double.parseDouble(line.substring(6).trim());
+            } else if (line.startsWith("Stock:")) {
+                stock = Integer.parseInt(line.substring(6).trim());
+            } else if (line.startsWith("Image URL:")) {
+                imageUrl = line.substring(10).trim();
             }
-            if (currentOffer.length() > 0) {
-                offers.add(currentOffer.toString().trim());
-            }
-
-            return offers;
-        }
-        return List.of();
-    }
-
-    private String saveImage(MultipartFile image) throws IOException {
-        File directory = new File(IMAGE_UPLOAD_DIR);
-        if (!directory.exists()) {
-            directory.mkdirs();
         }
 
-        String originalFileName = image.getOriginalFilename();
-        Path path = Paths.get(IMAGE_UPLOAD_DIR + originalFileName);
-        Files.write(path, image.getBytes());
-
-        return path.toString();
+        return Product.builder()
+                .name(name)
+                .price(price)
+                .stock(stock)
+                .imageUrl(imageUrl)
+                .build();
     }
-*/
-
-
-
 }

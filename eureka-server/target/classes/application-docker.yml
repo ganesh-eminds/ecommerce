@@ -9,4 +9,4 @@ eureka:
     hostname: localhost
 spring:
   application:
-    name: eureka-serve
+    name: eureka-server
