@@ -1,9 +1,9 @@
 package com.matrix.ecommerce.payment.event;
 
-import com.matrix.ecommerce.dtos.dto.PaymentFailedEvent;
-import com.matrix.ecommerce.dtos.dto.PaymentSuccessEvent;
-import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
-import com.matrix.ecommerce.dtos.dto.payment.PaymentStatus;
+import com.matrix.ecommerce.dtos.dto.dto.PaymentFailedEvent;
+import com.matrix.ecommerce.dtos.dto.dto.PaymentSuccessEvent;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentMethod;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentStatus;
 import com.matrix.ecommerce.payment.entity.Payment;
 import com.matrix.ecommerce.payment.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.payment.service.PaymentService;
@@ -26,6 +26,7 @@ public class PaymentEventListener {
         if(isSuccess) {
             Payment payment = Payment.builder()
                     .amount(paymentRequest.getAmount())
+                    .userId(paymentRequest.getUserId())
                     .paymentMethod(paymentRequest.getPaymentMethod() == null ? PaymentMethod.CASH : paymentRequest.getPaymentMethod())
                     .paymentStatus(PaymentStatus.SUCCESS).build();
             payment = paymentService.doPayment(payment);

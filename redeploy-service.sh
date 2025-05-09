@@ -8,7 +8,7 @@ CYAN=$(tput setaf 6 2>/dev/null || echo "")
 RESET=$(tput sgr0 2>/dev/null || echo "")
 
 # --------- All Modules ---------
-ALL_MODULES=("Common-Dtos" "order-service" "product-service" "payment-service" "eureka-server")
+ALL_MODULES=("Common-Dtos" "order-service" "product-service" "payment-service" "user-service" "eureka-server")
 COMMON_MODULE="Common-Dtos"
 MICROSERVICES=()
 

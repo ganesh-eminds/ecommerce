@@ -1,6 +1,6 @@
 package com.matrix.ecommerce.order.dto;
 
-import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentMethod;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

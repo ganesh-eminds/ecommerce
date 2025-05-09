@@ -1,7 +1,6 @@
 package com.matrix.ecommerce.order.controller;
 
-import com.matrix.ecommerce.order.dto.OrderRequest;
-import com.matrix.ecommerce.order.dto.OrderRequestDto;
+import com.matrix.ecommerce.dtos.dto.dto.order.OrderRequest;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.service.OrderService;
 import jakarta.validation.Valid;
@@ -10,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -45,4 +45,10 @@ public class OrderController {
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok("Order cancelled successfully.");
     }
+
+    @PostMapping("/orders/by-ids")
+    public List<OrderRequest> getOrdersByIds(@RequestBody Set<UUID> ids) {
+        return orderService.getOrdersByIds(ids); // convert entity → DTO
+    }
+
 }

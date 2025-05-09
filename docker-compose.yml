@@ -69,6 +69,17 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
 
+  user-service:
+    build: ./user-service
+    ports:
+      - 8084:8084
+    depends_on:
+      - eureka-server
+      - kafka
+      - postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     ports:

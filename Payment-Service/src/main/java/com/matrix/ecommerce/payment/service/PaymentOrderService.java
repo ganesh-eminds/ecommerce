@@ -1,6 +1,7 @@
 package com.matrix.ecommerce.payment.service;
 
-import com.matrix.ecommerce.dtos.dto.payment.PaymentStatus;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PayOrderRequest;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentStatus;
 import com.matrix.ecommerce.payment.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.payment.event.PaymentEventListener;
 import com.matrix.ecommerce.payment.repository.PaymentOrderRepository;
@@ -10,6 +11,7 @@ import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -43,11 +45,14 @@ public class PaymentOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + paymentId));
 
         existingPayment.setAmount(paymentRequest.getAmount());
+        existingPayment.setOrderId(paymentRequest.getOrderId());
+        existingPayment.setUserId(paymentRequest.getUserId());
         existingPayment.setPaymentMethod(paymentRequest.getPaymentMethod());
         existingPayment.setPaymentStatus(paymentRequest.getPaymentStatus());
 
         return paymentOrderRepository.save(existingPayment);
     }
+
     public void deletePayment(UUID paymentId) {
         PaymentOrderRequest existingPayment = paymentOrderRepository.findById(paymentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + paymentId));
@@ -65,4 +70,30 @@ public class PaymentOrderService {
         paymentEventListener.handlePaymentInitiated(paymentOrderRequest, false);
 
     }
+
+    public List<PayOrderRequest> getPaymentsByIds(Set<UUID> ids) {
+        List<PaymentOrderRequest> payments = paymentOrderRepository.findAllById(ids);
+        if (payments.isEmpty()) {
+            throw new RuntimeException("No payments found for the given IDs");
+        }
+        log.info("Converting payments to PayOrderRequest DTOs for IDs: {}", ids);
+        return payments.stream()
+                .map(this::toPayOrderRequest)
+                .toList();
+    }
+
+    private PayOrderRequest toPayOrderRequest(PaymentOrderRequest paymentOrderRequest) {
+        return PayOrderRequest.builder()
+                .orderId(paymentOrderRequest.getOrderId())               // assuming `id` is the orderId
+                .userId(getUserIdFromPayment(paymentOrderRequest))  // this depends on how you're storing userId (add field if missing)
+                .paymentStatus(paymentOrderRequest.getPaymentStatus())
+                .build();
+    }
+
+    // TEMP: if userId isn't stored, this will need a fix.
+    private UUID getUserIdFromPayment(PaymentOrderRequest paymentOrderRequest) {
+        // You should add `userId` to the Payment entity if it's not already there
+        throw new UnsupportedOperationException("UserId not found in Payment entity. Add it to track ownership.");
+    }
+
 }

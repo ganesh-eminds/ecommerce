@@ -1,11 +1,12 @@
 package com.matrix.ecommerce.product.listener;
 
-import com.matrix.ecommerce.dtos.dto.ProductUpdateFailedEvent;
-import com.matrix.ecommerce.dtos.dto.ProductUpdatedEvent;
-import com.matrix.ecommerce.dtos.dto.RestoreProductEvent;
-import com.matrix.ecommerce.dtos.dto.order.OrderCreatedEvent;
-import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
-import com.matrix.ecommerce.dtos.dto.product.RestoreProduct;
+import com.matrix.ecommerce.dtos.dto.dto.ProductUpdateFailedEvent;
+import com.matrix.ecommerce.dtos.dto.dto.ProductUpdatedEvent;
+import com.matrix.ecommerce.dtos.dto.dto.RestoreProductEvent;
+import com.matrix.ecommerce.dtos.dto.dto.order.OrderCreatedEvent;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentStatus;
+import com.matrix.ecommerce.dtos.dto.dto.product.ProductDetails;
+import com.matrix.ecommerce.dtos.dto.dto.product.RestoreProduct;
 import com.matrix.ecommerce.product.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.repository.PaymentOrderRepository;
@@ -16,8 +17,6 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 @EnableKafka
@@ -172,8 +171,9 @@ public class ProductEventListener {
         // Save the payment order to the repository
         PaymentOrderRequest paymentOrderRequest = new PaymentOrderRequest(
                 event.getOrderId(),
+                event.getUserId(),
                 totalPrice,
-                "PENDING",
+                PaymentStatus.PENDING,
                 event.getPaymentMethod()
         );
         paymentOrderRepository.save(paymentOrderRequest);

@@ -1,6 +1,6 @@
 package com.matrix.ecommerce.product.controller;
 
-import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
+import com.matrix.ecommerce.dtos.dto.dto.product.ProductDetails;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.service.ProductService;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.matrix.ecommerce.payment.controller;
 
-import com.matrix.ecommerce.payment.dto.PayOrderRequest;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PayOrderRequest;
 import com.matrix.ecommerce.payment.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.payment.service.PaymentOrderService;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -32,7 +33,7 @@ public class PaymentOrderController {
     @PostMapping("/create")
     public ResponseEntity<String> createPayment(@RequestBody PayOrderRequest payOrderRequest) {
         log.info("Creating payment for order ID: {}", payOrderRequest.getOrderId());
-        paymentOrderService.createPayment(UUID.fromString(String.valueOf(payOrderRequest.getOrderId())));
+        paymentOrderService.createPayment(payOrderRequest.getOrderId());
         return ResponseEntity.ok("Payment created successfully");
     }
     // cancel payment by order id
@@ -42,4 +43,9 @@ public class PaymentOrderController {
         paymentOrderService.cancelPayment(orderId);
         return ResponseEntity.ok("Payment cancelled successfully");
     }
+    @PostMapping("/payments/by-ids")
+    public List<PayOrderRequest> getPaymentsByIds(@RequestBody Set<UUID> ids) {
+        return paymentOrderService.getPaymentsByIds(ids); // convert entity → DTO
+    }
+
 }

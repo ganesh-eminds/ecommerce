@@ -2,7 +2,7 @@
 
 echo "Running mvn clean install for all services..."
 
-modules=("Common-Dtos" "order-service" "product-service" "payment-service" "eureka-server")
+modules=("Common-Dtos" "order-service" "product-service" "payment-service" "user-service")
 failed_modules=()
 
 # Initial build loop

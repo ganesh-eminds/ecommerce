@@ -1,7 +1,7 @@
 package com.matrix.ecommerce.order.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,10 +18,12 @@ import java.util.UUID;
 @Builder
 @Table(name = "orders")
 public class Order {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+
+    private UUID userId;  // 👈 New field
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
@@ -35,3 +37,4 @@ public class Order {
     @CreationTimestamp
     private LocalDateTime createdAt;
 }
+

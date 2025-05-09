@@ -1,7 +1,7 @@
 package com.matrix.ecommerce.order.controller;
 
-import com.matrix.ecommerce.dtos.dto.exception.ExceptionDto;
-import com.matrix.ecommerce.dtos.dto.exception.ValidationException;
+import com.matrix.ecommerce.dtos.dto.dto.exception.ExceptionDto;
+import com.matrix.ecommerce.dtos.dto.dto.exception.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

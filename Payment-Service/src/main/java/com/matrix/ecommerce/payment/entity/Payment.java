@@ -1,7 +1,7 @@
 package com.matrix.ecommerce.payment.entity;
 
-import com.matrix.ecommerce.dtos.dto.payment.PaymentMethod;
-import com.matrix.ecommerce.dtos.dto.payment.PaymentStatus;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentMethod;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +21,7 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    private UUID userId;
     private Double amount;
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;

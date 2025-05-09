@@ -1,6 +1,6 @@
 package com.matrix.ecommerce.product.service;
 
-import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
+import com.matrix.ecommerce.dtos.dto.dto.product.ProductDetails;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.repository.ProductRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;

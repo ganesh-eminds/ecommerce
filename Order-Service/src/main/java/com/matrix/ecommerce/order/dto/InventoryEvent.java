@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.order.dto;
 
+import com.matrix.ecommerce.dtos.dto.dto.product.ProductRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

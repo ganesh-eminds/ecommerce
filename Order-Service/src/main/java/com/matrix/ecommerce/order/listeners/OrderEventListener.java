@@ -1,12 +1,11 @@
 package com.matrix.ecommerce.order.listeners;
 
-import com.matrix.ecommerce.dtos.dto.*;
-import com.matrix.ecommerce.dtos.dto.product.RestoreProduct;
+import com.matrix.ecommerce.dtos.dto.dto.*;
+import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentStatus;
+import com.matrix.ecommerce.dtos.dto.dto.product.RestoreProduct;
 import com.matrix.ecommerce.order.entity.Order;
-import com.matrix.ecommerce.order.entity.OrderItem;
 import com.matrix.ecommerce.order.entity.OrderStatus;
 import com.matrix.ecommerce.order.repository.OrderRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -38,7 +37,7 @@ public class OrderEventListener {
 
     @KafkaListener(topics = "product-updated", groupId = "order-group")
     public void handleProductUpdated(ProductUpdatedEvent event) {
-        PaymentRequest paymentRequest = new PaymentRequest(event.getOrderId(), event.getTotalPrice(), "PAYMENT_PENDING", event.getPaymentMethod());
+        PaymentRequest paymentRequest = new PaymentRequest(event.getOrderId(), event.getTotalPrice(), PaymentStatus.PENDING, event.getPaymentMethod());
         log.info("Sending payment-initiated for order {} with total price {}", event.getOrderId(), event.getTotalPrice());
         kafkaTemplate.send("payment-initiated", paymentRequest);
     }
