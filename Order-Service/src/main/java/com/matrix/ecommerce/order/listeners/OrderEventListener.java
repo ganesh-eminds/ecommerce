@@ -1,30 +1,32 @@
 package com.matrix.ecommerce.order.listeners;
 
 import com.matrix.ecommerce.dtos.dto.*;
-import com.matrix.ecommerce.dtos.dto.payment.PaymentTimeoutEvent;
+import com.matrix.ecommerce.dtos.dto.product.RestoreProduct;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.entity.OrderItem;
 import com.matrix.ecommerce.order.entity.OrderStatus;
 import com.matrix.ecommerce.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 /**
  * OrderEventListener listens to various Kafka events related to orders and processes them accordingly.
  */
 @Slf4j
 public class OrderEventListener {
 
-    private final OrderRepository orderRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
+    @Autowired
+    private OrderRepository orderRepository;
     private final String paymentTopic = "payment-initiated";
     private final String productTopic = "product-updated";
     private final String productUpdateFailedTopic = "product-update-failed";
@@ -55,12 +57,28 @@ public class OrderEventListener {
         updateOrderStatus(event.getOrderId(), OrderStatus.COMPLETED);
     }
 
+    public RestoreProductEvent buildRestoreEvent(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+
+        List<RestoreProduct> restoreProducts = order.getOrderItems().stream()
+                .map(item -> {
+                    RestoreProduct restoreProduct = new RestoreProduct();
+                    restoreProduct.setOrderId(orderId);
+                    restoreProduct.setProductId(item.getProductId());
+                    restoreProduct.setQuantity(item.getQuantity());
+                    return restoreProduct;
+                })
+                .toList();
+
+        return new RestoreProductEvent(orderId, restoreProducts);
+    }
+
     @KafkaListener(topics = "payment-failed", groupId = "order-group")
     public void handlePaymentFailed(PaymentFailedEvent event) {
-        // OrderStatus as CANCELLED
-        log.info("Payment failed for order {}. Cancelling order.", event.getOrderId());
+        RestoreProductEvent restoreProductEvent = buildRestoreEvent(event.getOrderId());
+        kafkaTemplate.send("restore-product", restoreProductEvent);
         updateOrderStatus(event.getOrderId(), OrderStatus.CANCELLED);
-        kafkaTemplate.send("restore-product", new RestoreProductEvent(event.getOrderId(), event.getQuantity()));
     }
 
     private void updateOrderStatus(UUID event, OrderStatus orderStatus) {
@@ -70,65 +88,4 @@ public class OrderEventListener {
         order.setStatus(orderStatus);
         orderRepository.save(order);
     }
-
-    //@KafkaListener(topics = "payment-timeout", groupId = "order-group")
-//    public void handlePaymentTimeout(PaymentTimeoutEvent event) {
-//        long time = System.currentTimeMillis();
-//        log.info("Scheduling payment timeout 600 seconds for order ID: {}", event.getOrderId());
-//        try {
-//            Thread.sleep(60000);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//        log.info("Payment total schedule time: {}", System.currentTimeMillis() - time);
-//
-//        Optional<Order> orderOpt = orderRepository.findById(event.getOrderId());
-//        if (orderOpt.isPresent()) {
-//            Order order = orderOpt.get();
-//            if (order.getStatus() == OrderStatus.PENDING) {
-//                // Update order status to CANCELLED
-//                log.info("Payment timeout for order {}. Cancelling order.", order.getId());
-//                order.setStatus(OrderStatus.CANCELLED);
-//                orderRepository.save(order);
-//                log.info("Order {} cancelled due to payment timeout", order.getId());
-//
-//                // Send a RestoreProductEvent for each OrderItem
-//                for (OrderItem orderItem : order.getOrderItems()) {
-//                    RestoreProductEvent restoreProductEvent = new RestoreProductEvent(
-//                            orderItem.getProductId(),
-//                            orderItem.getQuantity()
-//                    );
-//                    kafkaTemplate.send(restoreProductTopic, restoreProductEvent);
-//                    log.info("Product restored for product ID: {}", orderItem.getProductId());
-//                }
-//            }
-//        }
-//    }
-
-//    @KafkaListener(topics = "payment-timeout", groupId = "order-group")
-//    public void handlePaymentTimeout(PaymentTimeoutEvent event) {
-//        long time = System.currentTimeMillis();
-//        log.info("Scheduling payment timeout 600 seconds for order ID: {}", event.getOrderId());
-//        try {
-//            Thread.sleep(60000);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//        log.info("Payment total schedule time: {}", System.currentTimeMillis() - time);
-//        Optional<Order> orderOpt = orderRepository.findById(event.getOrderId());
-//        if (orderOpt.isPresent()) {
-//            Order order = orderOpt.get();
-//            if (order.getStatus() == OrderStatus.PENDING) {
-//                // Update order status to CANCELLED
-//                log.info("Payment timeout for order {}. Cancelling order.", order.getId());
-//                order.setStatus(OrderStatus.CANCELLED);
-//                orderRepository.save(order);
-//                log.info("Order {} cancelled due to payment timeout", order.getId());
-//                // Send a message to restore the product
-//                RestoreProductEvent restoreProductEvent = new RestoreProductEvent(order.getProductId(),order.getQuantity());
-//                kafkaTemplate.send(restoreProductTopic, restoreProductEvent);
-//                log.info("Product restored for order {}", order.getId());
-//            }
-//        }
-//    }
 }

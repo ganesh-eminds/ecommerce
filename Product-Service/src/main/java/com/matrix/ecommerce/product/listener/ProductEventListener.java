@@ -5,6 +5,7 @@ import com.matrix.ecommerce.dtos.dto.ProductUpdatedEvent;
 import com.matrix.ecommerce.dtos.dto.RestoreProductEvent;
 import com.matrix.ecommerce.dtos.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.product.ProductDetails;
+import com.matrix.ecommerce.dtos.dto.product.RestoreProduct;
 import com.matrix.ecommerce.product.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.repository.PaymentOrderRepository;
@@ -15,6 +16,8 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @Component
 @EnableKafka
@@ -189,12 +192,12 @@ public class ProductEventListener {
     @KafkaListener(topics = "restore-product", groupId = "product-group")
     public void handleRestoreProduct(RestoreProductEvent event) {
         log.info("Restoring product with ID: {}", event.getOrderId());
-        Product product = productRepository.findById(event.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Product not found for ID: " + event.getOrderId()));
-
-        // Restore the stock
-        product.setStock(product.getStock() + event.getQuantity());
-        productRepository.save(product);
+        for (RestoreProduct rp : event.getProducts()) {
+            Product product = productRepository.findById(rp.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Product not found: " + rp.getProductId()));
+            product.setStock(product.getStock() + rp.getQuantity());
+            productRepository.save(product);
+        }
         log.info("Restored stock for product ID");
     }
 

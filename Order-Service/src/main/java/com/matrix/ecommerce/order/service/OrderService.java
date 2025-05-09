@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.order.service;
 
+import com.matrix.ecommerce.dtos.dto.PaymentFailedEvent;
 import com.matrix.ecommerce.dtos.dto.RestoreProductEvent;
 import com.matrix.ecommerce.dtos.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.payment.PaymentTimeoutEvent;
@@ -8,6 +9,7 @@ import com.matrix.ecommerce.order.dto.OrderRequest;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.entity.OrderItem;
 import com.matrix.ecommerce.order.entity.OrderStatus;
+import com.matrix.ecommerce.order.listeners.OrderEventListener;
 import com.matrix.ecommerce.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -170,15 +172,7 @@ public class OrderService {
     }
 
     public void cancelOrder(UUID orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-        if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new RuntimeException("Order already cancelled");
-        }
-        orderRepository.delete(order);
-        log.info("Order with ID {} deleted", orderId);
-        // Send Kafka message to notify deletion
-        kafkaTemplate.send("restore-product", orderId);
+        new OrderEventListener().handlePaymentFailed(new PaymentFailedEvent(orderId,0));
         log.info("Kafka message sent for order deletion with ID {}", orderId);
     }
 

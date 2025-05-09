@@ -5,7 +5,8 @@ public enum PaymentMethod {
     DEBIT_CARD("DEBIT_CARD"),
     PAYPAL("PAYPAL"),
     CASH_ON_DELIVERY("CASH_ON_DELIVERY"),
-    BANK_TRANSFER("BANK_TRANSFER");
+    BANK_TRANSFER("BANK_TRANSFER"),
+    CASH("CASH");
 
     private final String method;
 

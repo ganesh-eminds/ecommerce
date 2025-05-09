@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.payment.service;
 
+import com.matrix.ecommerce.dtos.dto.payment.PaymentStatus;
 import com.matrix.ecommerce.payment.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.payment.event.PaymentEventListener;
 import com.matrix.ecommerce.payment.repository.PaymentOrderRepository;
@@ -32,8 +33,8 @@ public class PaymentOrderService {
         log.info("Creating payment for order ID: {}", orderId);
         PaymentOrderRequest paymentOrderRequest = paymentOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with order id: " + orderId));
-        paymentEventListener.handlePaymentInitiated(paymentOrderRequest);
-        paymentOrderRequest.setPaymentStatus("COMPLETED");
+        paymentEventListener.handlePaymentInitiated(paymentOrderRequest, true);
+        paymentOrderRequest.setPaymentStatus(PaymentStatus.SUCCESS);
         paymentOrderRepository.save(paymentOrderRequest);
     }
 
@@ -54,4 +55,14 @@ public class PaymentOrderService {
         paymentOrderRepository.delete(existingPayment);
     }
 
+    public void cancelPayment(UUID orderId) {
+        PaymentOrderRequest paymentOrderRequest = paymentOrderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with order id: " + orderId));
+        paymentOrderRequest.setPaymentStatus(PaymentStatus.CANCELLED);
+        paymentOrderRepository.save(paymentOrderRequest);
+        log.info("Payment cancelled for order ID: {}", orderId);
+        // Notify payment failed and restore product stock
+        paymentEventListener.handlePaymentInitiated(paymentOrderRequest, false);
+
+    }
 }

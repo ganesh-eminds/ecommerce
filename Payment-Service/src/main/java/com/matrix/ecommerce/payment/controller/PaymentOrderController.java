@@ -35,4 +35,11 @@ public class PaymentOrderController {
         paymentOrderService.createPayment(UUID.fromString(String.valueOf(payOrderRequest.getOrderId())));
         return ResponseEntity.ok("Payment created successfully");
     }
+    // cancel payment by order id
+    @PutMapping("/cancel")
+    public ResponseEntity<String> cancelPayment(@RequestBody UUID orderId) {
+        log.info("Cancelling payment for order ID: {}", orderId);
+        paymentOrderService.cancelPayment(orderId);
+        return ResponseEntity.ok("Payment cancelled successfully");
+    }
 }
