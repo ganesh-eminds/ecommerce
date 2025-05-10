@@ -166,7 +166,7 @@ public class OrderService {
     }
 
     public void cancelOrder(UUID orderId) {
-        new OrderEventListener().handlePaymentFailed(new PaymentFailedEvent(orderId, 0));
+        new OrderEventListener(kafkaTemplate,orderRepository).handlePaymentFailed(new PaymentFailedEvent(orderId, 0));
         log.info("Kafka message sent for order deletion with ID {}", orderId);
     }
 

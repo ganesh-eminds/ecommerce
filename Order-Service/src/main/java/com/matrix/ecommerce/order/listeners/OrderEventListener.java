@@ -6,6 +6,7 @@ import com.matrix.ecommerce.dtos.dto.dto.product.RestoreProduct;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.entity.OrderStatus;
 import com.matrix.ecommerce.order.repository.OrderRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -20,12 +21,11 @@ import java.util.UUID;
  * OrderEventListener listens to various Kafka events related to orders and processes them accordingly.
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor=@__({@Autowired}))
 public class OrderEventListener {
 
-    @Autowired
-    private KafkaTemplate<String, Object> kafkaTemplate;
-    @Autowired
-    private OrderRepository orderRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OrderRepository orderRepository;
     private final String paymentTopic = "payment-initiated";
     private final String productTopic = "product-updated";
     private final String productUpdateFailedTopic = "product-update-failed";

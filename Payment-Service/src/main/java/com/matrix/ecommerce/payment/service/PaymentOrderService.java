@@ -83,6 +83,7 @@ public class PaymentOrderService {
     }
 
     private PayOrderRequest toPayOrderRequest(PaymentOrderRequest paymentOrderRequest) {
+        log.info("PaymentOrderRequest - {}", paymentOrderRequest);
         return PayOrderRequest.builder()
                 .orderId(paymentOrderRequest.getOrderId())               // assuming `id` is the orderId
                 .userId(getUserIdFromPayment(paymentOrderRequest))  // this depends on how you're storing userId (add field if missing)
@@ -91,9 +92,11 @@ public class PaymentOrderService {
     }
 
     // TEMP: if userId isn't stored, this will need a fix.
+
     private UUID getUserIdFromPayment(PaymentOrderRequest paymentOrderRequest) {
         // You should add `userId` to the Payment entity if it's not already there
-        throw new UnsupportedOperationException("UserId not found in Payment entity. Add it to track ownership.");
+        if (paymentOrderRequest.getUserId() == null)
+            throw new UnsupportedOperationException("UserId not found in Payment entity. Add it to track ownership.");
+        return paymentOrderRequest.getUserId();
     }
-
 }

@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-@FeignClient(name = "payment-service")
+@FeignClient(name = "PAYMENT-SERVICE")
 public interface PaymentClient {
-    @PostMapping("/payments/by-ids")
+    @PostMapping("/api/payment-orders/payments/by-ids")
     List<PayOrderRequest> getPaymentsByIds(@RequestBody Set<UUID> paymentOrderIds);
 }
