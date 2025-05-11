@@ -11,5 +11,5 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PaymentFailedEvent {
     private UUID orderId;
-    private int quantity;
+    private double amount;
 }

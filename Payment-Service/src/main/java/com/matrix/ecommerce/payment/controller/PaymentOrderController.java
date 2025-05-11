@@ -34,14 +34,14 @@ public class PaymentOrderController {
     public ResponseEntity<String> createPayment(@RequestBody PayOrderRequest payOrderRequest) {
         log.info("Creating payment for order ID: {}", payOrderRequest.getOrderId());
         paymentOrderService.createPayment(payOrderRequest.getOrderId());
-        return ResponseEntity.ok("Payment created successfully");
+        return ResponseEntity.ok("Amount is paid for the order "+ payOrderRequest.getOrderId() );
     }
     // cancel payment by order id
     @PutMapping("/cancel")
     public ResponseEntity<String> cancelPayment(@RequestBody UUID orderId) {
         log.info("Cancelling payment for order ID: {}", orderId);
         paymentOrderService.cancelPayment(orderId);
-        return ResponseEntity.ok("Payment cancelled successfully");
+        return ResponseEntity.ok("Cancelled the order "+ orderId);
     }
     @PostMapping("/payments/by-ids")
     public List<PayOrderRequest> getPaymentsByIds(@RequestBody Set<UUID> ids) {

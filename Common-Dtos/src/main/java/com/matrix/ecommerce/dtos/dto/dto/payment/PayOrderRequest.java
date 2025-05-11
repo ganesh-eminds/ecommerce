@@ -20,6 +20,5 @@ public class PayOrderRequest {
     @NotNull
     private UUID userId;
 
-    @NotNull
     private PaymentStatus paymentStatus;
 }

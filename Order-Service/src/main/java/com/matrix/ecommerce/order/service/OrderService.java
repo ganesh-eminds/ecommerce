@@ -1,6 +1,6 @@
 package com.matrix.ecommerce.order.service;
 
-import com.matrix.ecommerce.dtos.dto.dto.PaymentFailedEvent;
+import com.matrix.ecommerce.dtos.dto.dto.BalanceUpdateEvent;
 import com.matrix.ecommerce.dtos.dto.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.dto.order.OrderRequest;
 import com.matrix.ecommerce.dtos.dto.dto.product.ProductDetails;
@@ -10,6 +10,7 @@ import com.matrix.ecommerce.order.entity.OrderItem;
 import com.matrix.ecommerce.order.entity.OrderStatus;
 import com.matrix.ecommerce.order.listeners.OrderEventListener;
 import com.matrix.ecommerce.order.repository.OrderRepository;
+import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class OrderService {
 
     private static final String PRODUCT_OUT_OF_STOCK_DESCRIPTION = "Product is out of stock";
@@ -35,6 +37,7 @@ public class OrderService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ScheduledExecutorService scheduledExecutorService = java.util.concurrent.Executors.newScheduledThreadPool(5);
     private final RestTemplate restTemplate;
+    private final OrderEventListener orderEventListener;
 
     public static String generateKey(String prefix, String uniqueId) {
         return prefix + "-" + uniqueId;
@@ -76,12 +79,9 @@ public class OrderService {
     }
 
     public void sendKafkaToOrderProducts(Order order, List<OrderItem> orderItems) {
-
         String key = generateKey("order", UUID.randomUUID().toString());
-
         int partitionNo = calculatePartition(String.valueOf(orderItems.get(0).getProductId()), 10);
-
-        kafkaTemplate.send("order-created", Integer.valueOf(partitionNo), key, new OrderCreatedEvent(
+        kafkaTemplate.send("order-created", key, new OrderCreatedEvent(
                 order.getId(),
                 order.getUserId(),
                 orderItems.stream()
@@ -166,8 +166,23 @@ public class OrderService {
     }
 
     public void cancelOrder(UUID orderId) {
-        new OrderEventListener(kafkaTemplate,orderRepository).handlePaymentFailed(new PaymentFailedEvent(orderId, 0));
-        log.info("Kafka message sent for order deletion with ID {}", orderId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+        BalanceUpdateEvent balanceUpdateEvent = new BalanceUpdateEvent(
+                order.getId(),
+                order.getUserId(),
+                getTotalPrice(order.getOrderItems()),
+                false);
+        orderEventListener.handlePayment(balanceUpdateEvent);
+        log.info("Kafka message sent for order cancel with ID {}", orderId);
+    }
+
+    private double getTotalPrice(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
     }
 
     public List<OrderRequest> getOrdersByIds(Set<UUID> ids) {

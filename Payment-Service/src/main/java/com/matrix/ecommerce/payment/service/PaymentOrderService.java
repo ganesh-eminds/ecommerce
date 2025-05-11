@@ -1,13 +1,16 @@
 package com.matrix.ecommerce.payment.service;
 
+import com.matrix.ecommerce.dtos.dto.dto.BalanceUpdateEvent;
 import com.matrix.ecommerce.dtos.dto.dto.payment.PayOrderRequest;
 import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentStatus;
 import com.matrix.ecommerce.payment.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.payment.event.PaymentEventListener;
 import com.matrix.ecommerce.payment.repository.PaymentOrderRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,10 +20,12 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class PaymentOrderService {
 
     private final PaymentOrderRepository paymentOrderRepository;
     private final PaymentEventListener paymentEventListener;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public PaymentOrderRequest getPaymentByOrderId(UUID orderId) {
         return paymentOrderRepository.findById(orderId)
@@ -34,10 +39,23 @@ public class PaymentOrderService {
     public void createPayment(UUID orderId) {
         log.info("Creating payment for order ID: {}", orderId);
         PaymentOrderRequest paymentOrderRequest = paymentOrderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with order id: " + orderId));
-        paymentEventListener.handlePaymentInitiated(paymentOrderRequest, true);
-        paymentOrderRequest.setPaymentStatus(PaymentStatus.SUCCESS);
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with given order id: " + orderId));
+        paymentOrderRequest.setPaymentStatus(PaymentStatus.PENDING);
+//        paymentEventListener.handlePaymentInitiated(getPaymentObj(paymentOrderRequest));
+        log.info("saving paymentOrderRequest: {} " , paymentOrderRequest);
         paymentOrderRepository.save(paymentOrderRequest);
+        BalanceUpdateEvent event = getBalanceUpdateEventObj(paymentOrderRequest);
+        log.info("Sending BalanceUpdateEvent to Payment Initiated {} ", event);
+        kafkaTemplate.send("payment-initiated", event);
+    }
+
+    private BalanceUpdateEvent getBalanceUpdateEventObj(PaymentOrderRequest paymentOrderRequest) {
+        return BalanceUpdateEvent.builder()
+                .orderId(paymentOrderRequest.getOrderId())
+                .amount(paymentOrderRequest.getAmount())
+                .userId(paymentOrderRequest.getUserId())
+                .isSuccess(true)
+                .build();
     }
 
     public PaymentOrderRequest updatePayment(UUID paymentId, PaymentOrderRequest paymentRequest) {
@@ -67,8 +85,7 @@ public class PaymentOrderService {
         paymentOrderRepository.save(paymentOrderRequest);
         log.info("Payment cancelled for order ID: {}", orderId);
         // Notify payment failed and restore product stock
-        paymentEventListener.handlePaymentInitiated(paymentOrderRequest, false);
-
+        kafkaTemplate.send("user-update", new BalanceUpdateEvent(paymentOrderRequest.getOrderId(), paymentOrderRequest.getUserId(), paymentOrderRequest.getAmount(), false));
     }
 
     public List<PayOrderRequest> getPaymentsByIds(Set<UUID> ids) {

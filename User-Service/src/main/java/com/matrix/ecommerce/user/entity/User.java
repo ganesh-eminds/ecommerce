@@ -40,5 +40,7 @@ public class User {
     private Set<UUID> paymentOrderIds;
     private Set<UUID> orderIds;
 
+    private double balance;
+
 
 }

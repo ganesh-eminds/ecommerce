@@ -11,6 +11,7 @@ import com.matrix.ecommerce.product.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.repository.PaymentOrderRepository;
 import com.matrix.ecommerce.product.repository.ProductRepository;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 @Component
 @EnableKafka
 @Slf4j
+@Transactional
 public class ProductEventListener {
 
     @Autowired
@@ -32,111 +34,9 @@ public class ProductEventListener {
     private PaymentOrderRepository paymentOrderRepository;
 
     @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated1(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer1");
-    }
-
-    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated2(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer2");
-    }
-
-    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated3(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer3");
-    }
-
-    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated4(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer4");
-    }
-
-    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated5(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer5");
-    }
-
-    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated6(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer6");
-    }
-
-    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated7(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer7");
-    }
-
-    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated8(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer8");
-    }
-
-    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated9(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer9");
-    }
-
-    @KafkaListener(topics = {"order-created", "order-updated"}, groupId = "product-group")
-    public void handleOrderCreatedOrUpdated10(OrderCreatedEvent event) {
-        try {
-            handleOrderCreatedAndUpdatedEvent(event);
-        } catch (RuntimeException ex) {
-            log.error("Error processing event for order ID: {}. Sending to dead-letter topic.", event.getOrderId(), ex);
-        }
-        System.out.println("consumer10");
-    }
-
     public void handleOrderCreatedAndUpdatedEvent(OrderCreatedEvent event) {
-
         log.info("Handling event for order ID: {}", event.getOrderId());
-
         double totalPrice = 0.0;
-
         for (ProductDetails productDetails : event.getProductDetails()) {
             Product product = productRepository.findById(productDetails.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found for ID: " + productDetails.getProductId()));
@@ -179,6 +79,7 @@ public class ProductEventListener {
         paymentOrderRepository.save(paymentOrderRequest);
 
         // Send ProductUpdatedEvent for both creation and update
+/*
         ProductUpdatedEvent productUpdatedEvent = new ProductUpdatedEvent(
                 event.getOrderId(),
                 totalPrice,
@@ -187,6 +88,7 @@ public class ProductEventListener {
         );
         kafkaTemplate.send("product-updated", productUpdatedEvent);
         log.info("Sent product updated event");
+*/
     }
 
     @KafkaListener(topics = "restore-product", groupId = "product-group")

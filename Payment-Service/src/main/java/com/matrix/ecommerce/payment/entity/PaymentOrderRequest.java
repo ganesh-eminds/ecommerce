@@ -3,10 +3,7 @@ package com.matrix.ecommerce.payment.entity;
 //import com.matrix.ecommerce.user.entity.User;
 import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentMethod;
 import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentStatus;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.UUID;
@@ -16,6 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Entity
+@Table(name = "payments")
 public class PaymentOrderRequest {
     @Id
     private UUID orderId;

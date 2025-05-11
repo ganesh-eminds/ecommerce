@@ -4,6 +4,7 @@ import com.matrix.ecommerce.dtos.dto.dto.PaymentFailedEvent;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.entity.OrderStatus;
 import com.matrix.ecommerce.order.repository.OrderRepository;
+import com.matrix.ecommerce.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ public class OrderTimeoutScheduler {
 
     private final OrderRepository orderRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final OrderEventListener orderEventListener;
+    private final OrderService orderService;
 
     @Scheduled(fixedRate = 30000)
     public void cancelStaleOrders() {
@@ -29,9 +30,7 @@ public class OrderTimeoutScheduler {
         log.info("Cancelling {} stale orders", staleOrders.size());
 
         for (Order order : staleOrders) {
-            order.setStatus(OrderStatus.CANCELLED);
-            orderRepository.save(order);
-            orderEventListener.handlePaymentFailed(new PaymentFailedEvent(order.getId(), 0));
+            orderService.cancelOrder(order.getId());
         }
     }
 }
