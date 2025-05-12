@@ -34,12 +34,14 @@ public class ProductService {
         mobile.setName("Mobile");
         mobile.setPrice(100.0);
         mobile.setStock(100);
+        mobile.setImageUrl("/image.jpg");
         productRepository.save(mobile);
 
         Product tv = new Product();
         tv.setName("TV");
         tv.setPrice(200.0);
         tv.setStock(200);
+        tv.setImageUrl("/tv.jpg");
         productRepository.save(tv);
     }
 

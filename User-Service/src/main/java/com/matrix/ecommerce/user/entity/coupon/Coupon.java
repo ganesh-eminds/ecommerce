@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -16,30 +17,32 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Coupon {
 
+
     @Id
-    @GeneratedValue
     private UUID id;
 
-    @Column(unique = true, nullable = false)
     private String code;
 
     private String description;
 
-    private BigDecimal discountAmount;      // for flat discount
-    private BigDecimal discountPercent;     // for percentage discount
-    private BigDecimal maxDiscount;         // max discount limit
-    private BigDecimal minOrderValue;       // min value to apply
+    private Double discountAmount; // For flat discount
+
+    private Double discountPercentage; // For percentage discount
 
     private boolean firstOrderOnly;
 
-    private LocalDateTime expiryDate;
+    private Double minimumPurchaseAmount;
 
-    private int usageLimit;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "coupon_allowed_users", joinColumns = @JoinColumn(name = "coupon_id"))
+    @Column(name = "user_id")
+    private List<UUID> allowedUserIds;
 
-    private int totalUses;
+    private LocalDate expiryDate;
 
-    @OneToMany(mappedBy = "coupon", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private List<CouponUsage> usages;
+    private Integer maxGlobalUsages;
 
+    private Integer maxUsagesPerUser;
+
+    private boolean active;
 }

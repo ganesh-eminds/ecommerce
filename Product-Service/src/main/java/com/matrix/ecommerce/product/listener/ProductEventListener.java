@@ -2,7 +2,8 @@ package com.matrix.ecommerce.product.listener;
 
 import com.matrix.ecommerce.dtos.dto.dto.ProductUpdateFailedEvent;
 import com.matrix.ecommerce.dtos.dto.dto.RestoreProductEvent;
-import com.matrix.ecommerce.dtos.dto.dto.coupon.UserCouponDto;
+import com.matrix.ecommerce.dtos.dto.dto.coupon.CouponValidationRequest;
+import com.matrix.ecommerce.dtos.dto.dto.coupon.CouponValidationResponse;
 import com.matrix.ecommerce.dtos.dto.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentStatus;
 import com.matrix.ecommerce.dtos.dto.dto.product.ProductDetails;
@@ -73,17 +74,17 @@ public class ProductEventListener {
         }
 
         log.info("Total price of the order ID {} is: {}", event.getOrderId(), totalPrice);
-        BigDecimal finalAmount = null;
+        CouponValidationResponse couponValidationResponse = new CouponValidationResponse();
         if (event.getCouponCode() != null) {
             log.info("Coupon code applied: {}", event.getCouponCode());
-            finalAmount = userClient.getCouponsByUserId(new UserCouponDto(event.getUserId(), event.getOrderId(), event.getCouponCode(), new BigDecimal(totalPrice), true));
-            log.info("Final amount after applying coupon: {}", finalAmount);
+            couponValidationResponse = userClient.getCouponsByUserId(new CouponValidationRequest(event.getUserId(), event.getCouponCode(), new BigDecimal(totalPrice)));
+            log.info("Final amount after applying coupon: {}", couponValidationResponse.getDiscountedAmount());
         }
         // Save the payment order to the repository
         PaymentOrderRequest paymentOrderRequest = new PaymentOrderRequest(
                 event.getOrderId(),
                 event.getUserId(),
-                finalAmount != null ? finalAmount.doubleValue() : totalPrice,
+                couponValidationResponse.getDiscountedAmount() != null ? (totalPrice - couponValidationResponse.getDiscountedAmount().doubleValue()) : totalPrice,
                 PaymentStatus.PENDING,
                 event.getPaymentMethod()
         );

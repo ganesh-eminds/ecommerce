@@ -1,70 +1,89 @@
 package com.matrix.ecommerce.user.service;
 
-import com.matrix.ecommerce.dtos.dto.dto.coupon.UserCouponDto;
+import com.matrix.ecommerce.dtos.dto.dto.coupon.CouponValidationRequest;
+import com.matrix.ecommerce.dtos.dto.dto.coupon.CouponValidationResponse;
 import com.matrix.ecommerce.user.entity.User;
 import com.matrix.ecommerce.user.entity.coupon.Coupon;
 import com.matrix.ecommerce.user.entity.coupon.CouponUsage;
 import com.matrix.ecommerce.user.repository.CouponRepository;
 import com.matrix.ecommerce.user.repository.CouponUsageRepository;
 import com.matrix.ecommerce.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
+@Slf4j
 public class CouponService {
 
-    private final CouponRepository couponRepository;
-    private final CouponUsageRepository couponUsageRepository;
-    private final UserRepository userRepository;
+    @Autowired private CouponRepository couponRepository;
+    @Autowired private CouponUsageRepository couponUsageRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Transactional
-    public BigDecimal applyCoupon(UserCouponDto userCouponDto) {
-        Coupon coupon = couponRepository.findByCode(userCouponDto.getCode())
-                .orElseThrow(() -> new RuntimeException("Invalid coupon"));
+    public CouponValidationResponse applyCoupon(CouponValidationRequest request) {
+        log.info("Applying coupon: {} for user: {}", request.getCouponCode(), request.getUserId());
+        boolean isValid = true;
+        Coupon coupon = couponRepository.findByCode(request.getCouponCode())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid coupon code"));
 
-        if (coupon.getExpiryDate().isBefore(LocalDateTime.now())) throw new RuntimeException("Expired coupon");
-        if (coupon.getMinOrderValue() != null && userCouponDto.getOrderTotal().compareTo(coupon.getMinOrderValue()) < 0)
-            throw new RuntimeException("Order below minimum");
+        if (!coupon.isActive() || coupon.getExpiryDate().isBefore(LocalDate.now())) {
+            isValid = false;
+            throw new IllegalStateException("Coupon expired or inactive");
+        }
 
-        if (coupon.isFirstOrderOnly() && !userCouponDto.isFirstOrder())
-            throw new RuntimeException("Only for first order");
+        if (coupon.getAllowedUserIds() != null && !coupon.getAllowedUserIds().isEmpty()
+                && !coupon.getAllowedUserIds().contains(request.getUserId())) {
+            isValid = false;
+            throw new IllegalStateException("Coupon not valid for this user");
+        }
 
-        if (coupon.getUsageLimit() > 0 && coupon.getTotalUses() >= coupon.getUsageLimit())
-            throw new RuntimeException("Usage limit reached");
+        if (coupon.getMinimumPurchaseAmount() != null && request.getTotalAmount().doubleValue() < coupon.getMinimumPurchaseAmount()) {
+            isValid = false;
+            throw new IllegalStateException("Order amount below coupon minimum");
+        }
 
-        if (couponUsageRepository.existsByUserIdAndCoupon_Code(userCouponDto.getUserId(), userCouponDto.getCode()))
-            throw new RuntimeException("Already used this coupon");
+        if (coupon.getMaxGlobalUsages() != null &&
+                couponUsageRepository.countByCoupon(coupon) >= coupon.getMaxGlobalUsages()) {
+            isValid = false;
+            throw new IllegalStateException("Coupon usage limit reached");
+        }
 
-        BigDecimal discount = coupon.getDiscountAmount() != null ? coupon.getDiscountAmount() :
-                userCouponDto.getOrderTotal().multiply(coupon.getDiscountPercent()).divide(BigDecimal.valueOf(100));
+        if (coupon.getMaxUsagesPerUser() != null &&
+                couponUsageRepository.countByCouponAndUser(coupon, getUserById(request.getUserId())) >= coupon.getMaxUsagesPerUser()) {
+            isValid = false;
+            throw new IllegalStateException("Coupon usage limit per user reached");
+        }
 
-        if (coupon.getMaxDiscount() != null && discount.compareTo(coupon.getMaxDiscount()) > 0)
-            discount = coupon.getMaxDiscount();
+        double discount = 0;
+        if (coupon.getDiscountAmount() != null) {
+            discount = coupon.getDiscountAmount();
+        } else if (coupon.getDiscountPercentage() != null) {
+            discount = (coupon.getDiscountPercentage() / 100.0) * request.getTotalAmount().doubleValue();
+        }
 
-        BigDecimal finalAmount = userCouponDto.getOrderTotal().subtract(discount);
-
-
-        // Audit Log
-        CouponUsage usage = CouponUsage.builder()
-                .coupon(coupon)
-                .user(userRepository.findById(userCouponDto.getUserId()).orElse(new User()))
-                .orderId(userCouponDto.getOrderId())
-                .orderAmount(userCouponDto.getOrderTotal())
-                .discountApplied(discount)
-                .usedAt(LocalDateTime.now())
-                .build();
-
+        // Save usage
+        CouponUsage usage = new CouponUsage();
+        usage.setCoupon(coupon);
+        usage.setUser(getUserById(request.getUserId()));
+        usage.setUsedAt(LocalDate.now());
+        usage.setDiscountApplied(discount);
         couponUsageRepository.save(usage);
-        coupon.setTotalUses(coupon.getTotalUses() + 1);
-        couponRepository.save(coupon);
 
-        return finalAmount;
+        log.info("Coupon applied successfully: {} with discount: {}", coupon.getCode(), discount);
+        CouponValidationResponse response = new CouponValidationResponse();
+        response.setMessage("Coupon applied successfully");
+        response.setDiscountedAmount(new BigDecimal(discount));
+        response.setValid(isValid);
+        return response;
+    }
+
+    private User getUserById(UUID userId) {
+        return userRepository.findById(userId).orElseThrow();
     }
 
 }
