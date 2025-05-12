@@ -27,4 +27,6 @@ public class OrderRequest {
     @NotNull
     private PaymentMethod paymentMethod;
 
+    private String coupon;
+
 }

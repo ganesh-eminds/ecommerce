@@ -1,4 +1,4 @@
-package com.matrix.ecommerce.order.controller;
+package com.matrix.ecommerce.user.controller;
 
 import com.matrix.ecommerce.dtos.dto.dto.exception.ExceptionDto;
 import com.matrix.ecommerce.dtos.dto.dto.exception.ValidationException;

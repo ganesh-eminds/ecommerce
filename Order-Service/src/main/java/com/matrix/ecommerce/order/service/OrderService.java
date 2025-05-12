@@ -50,6 +50,7 @@ public class OrderService {
                 .paymentMethod(orderRequest.getPaymentMethod())
                 .userId(orderRequest.getUserId())
                 .createdAt(LocalDateTime.now())
+                .couponCode(orderRequest.getCoupon())
                 .build();
 
         // Map and attach OrderItems
@@ -92,7 +93,8 @@ public class OrderService {
                                 .build())
                         .toList(),
                 order.getPaymentMethod(),
-                "order-created"
+                "order-created",
+                order.getCouponCode()
         ));
     }
 
@@ -120,7 +122,8 @@ public class OrderService {
                 order.getUserId(),
                 productDetails,
                 order.getPaymentMethod(),
-                "order-updated"
+                "order-updated",
+                order.getCouponCode()
         ));
     }
 

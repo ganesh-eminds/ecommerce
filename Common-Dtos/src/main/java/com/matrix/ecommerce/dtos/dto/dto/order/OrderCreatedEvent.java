@@ -20,4 +20,5 @@ public class OrderCreatedEvent {
     private List<ProductDetails> productDetails;
     private PaymentMethod paymentMethod;
     private String eventType;
+    private String couponCode;
 }

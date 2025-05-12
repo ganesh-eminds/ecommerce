@@ -36,5 +36,8 @@ public class Order {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    private String couponCode;
+
 }
 

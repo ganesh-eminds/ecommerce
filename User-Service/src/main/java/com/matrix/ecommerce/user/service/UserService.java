@@ -30,6 +30,7 @@ public class UserService {
     private OrderClient orderClient;
     @Autowired
     private PaymentClient paymentClient;
+
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 

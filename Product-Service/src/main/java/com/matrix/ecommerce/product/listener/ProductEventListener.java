@@ -1,12 +1,13 @@
 package com.matrix.ecommerce.product.listener;
 
 import com.matrix.ecommerce.dtos.dto.dto.ProductUpdateFailedEvent;
-import com.matrix.ecommerce.dtos.dto.dto.ProductUpdatedEvent;
 import com.matrix.ecommerce.dtos.dto.dto.RestoreProductEvent;
+import com.matrix.ecommerce.dtos.dto.dto.coupon.UserCouponDto;
 import com.matrix.ecommerce.dtos.dto.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentStatus;
 import com.matrix.ecommerce.dtos.dto.dto.product.ProductDetails;
 import com.matrix.ecommerce.dtos.dto.dto.product.RestoreProduct;
+import com.matrix.ecommerce.product.client.UserClient;
 import com.matrix.ecommerce.product.entity.PaymentOrderRequest;
 import com.matrix.ecommerce.product.entity.Product;
 import com.matrix.ecommerce.product.repository.PaymentOrderRepository;
@@ -19,6 +20,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 @EnableKafka
 @Slf4j
@@ -29,6 +32,9 @@ public class ProductEventListener {
     private ProductRepository productRepository;
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
+    @Autowired
+    private UserClient userClient;
+
 
     @Autowired
     private PaymentOrderRepository paymentOrderRepository;
@@ -67,12 +73,17 @@ public class ProductEventListener {
         }
 
         log.info("Total price of the order ID {} is: {}", event.getOrderId(), totalPrice);
-
+        BigDecimal finalAmount = null;
+        if (event.getCouponCode() != null) {
+            log.info("Coupon code applied: {}", event.getCouponCode());
+            finalAmount = userClient.getCouponsByUserId(new UserCouponDto(event.getUserId(), event.getOrderId(), event.getCouponCode(), new BigDecimal(totalPrice), true));
+            log.info("Final amount after applying coupon: {}", finalAmount);
+        }
         // Save the payment order to the repository
         PaymentOrderRequest paymentOrderRequest = new PaymentOrderRequest(
                 event.getOrderId(),
                 event.getUserId(),
-                totalPrice,
+                finalAmount != null ? finalAmount.doubleValue() : totalPrice,
                 PaymentStatus.PENDING,
                 event.getPaymentMethod()
         );
