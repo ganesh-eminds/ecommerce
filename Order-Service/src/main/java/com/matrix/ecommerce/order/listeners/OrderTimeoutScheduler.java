@@ -1,10 +1,10 @@
 package com.matrix.ecommerce.order.listeners;
 
-import com.matrix.ecommerce.dtos.dto.dto.PaymentFailedEvent;
+import com.matrix.ecommerce.dtos.dto.dto.order.OrderStatus;
 import com.matrix.ecommerce.order.entity.Order;
-import com.matrix.ecommerce.order.entity.OrderStatus;
 import com.matrix.ecommerce.order.repository.OrderRepository;
 import com.matrix.ecommerce.order.service.OrderService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +17,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor(onConstructor=@__({@Autowired}))
+@Transactional
 public class OrderTimeoutScheduler {
 
     private final OrderRepository orderRepository;

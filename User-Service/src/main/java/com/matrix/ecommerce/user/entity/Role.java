@@ -18,4 +18,5 @@ public class Role {
     private UUID id;
 
     private String name;
+
 }

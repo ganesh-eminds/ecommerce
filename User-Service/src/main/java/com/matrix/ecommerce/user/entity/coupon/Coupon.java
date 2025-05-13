@@ -36,6 +36,7 @@ public class Coupon {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "coupon_allowed_users", joinColumns = @JoinColumn(name = "coupon_id"))
     @Column(name = "user_id")
+    @JsonManagedReference
     private List<UUID> allowedUserIds;
 
     private LocalDate expiryDate;

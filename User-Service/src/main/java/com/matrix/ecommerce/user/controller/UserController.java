@@ -5,7 +5,9 @@ import com.matrix.ecommerce.dtos.dto.dto.payment.PayOrderRequest;
 import com.matrix.ecommerce.dtos.dto.dto.user.UserDTO;
 import com.matrix.ecommerce.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,8 +38,8 @@ public class UserController {
 
     // Get user orders
     @GetMapping("/{id}/orders")
-    public List<OrderRequest> getUserOrders(@PathVariable UUID id) {
-        return userService.getUserOrders(id);
+    public ResponseEntity<List<OrderRequest>> getUserOrders(@PathVariable UUID id, WebRequest request) {
+        return ResponseEntity.ok(userService.getUserOrders(id, request));
     }
 
     // Get user payments

@@ -2,12 +2,13 @@ package com.matrix.ecommerce.order.service;
 
 import com.matrix.ecommerce.dtos.dto.dto.BalanceUpdateEvent;
 import com.matrix.ecommerce.dtos.dto.dto.order.OrderCreatedEvent;
+import com.matrix.ecommerce.dtos.dto.dto.order.OrderDto;
 import com.matrix.ecommerce.dtos.dto.dto.order.OrderRequest;
+import com.matrix.ecommerce.dtos.dto.dto.order.OrderStatus;
 import com.matrix.ecommerce.dtos.dto.dto.product.ProductDetails;
 import com.matrix.ecommerce.dtos.dto.dto.product.ProductRequest;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.entity.OrderItem;
-import com.matrix.ecommerce.order.entity.OrderStatus;
 import com.matrix.ecommerce.order.listeners.OrderEventListener;
 import com.matrix.ecommerce.order.repository.OrderRepository;
 import jakarta.transaction.Transactional;
@@ -82,7 +83,7 @@ public class OrderService {
     public void sendKafkaToOrderProducts(Order order, List<OrderItem> orderItems) {
         String key = generateKey("order", UUID.randomUUID().toString());
         int partitionNo = calculatePartition(String.valueOf(orderItems.get(0).getProductId()), 10);
-        kafkaTemplate.send("order-created", key, new OrderCreatedEvent(
+        kafkaTemplate.send("order-created", new OrderCreatedEvent(
                 order.getId(),
                 order.getUserId(),
                 orderItems.stream()
@@ -94,7 +95,8 @@ public class OrderService {
                         .toList(),
                 order.getPaymentMethod(),
                 "order-created",
-                order.getCouponCode()
+                order.getCouponCode(),
+                order.getStatus()
         ));
     }
 
@@ -123,7 +125,8 @@ public class OrderService {
                 productDetails,
                 order.getPaymentMethod(),
                 "order-updated",
-                order.getCouponCode()
+                order.getCouponCode(),
+                order.getStatus()
         ));
     }
 
@@ -215,4 +218,18 @@ public class OrderService {
                 .toList();
     }
 
+    public List<OrderDto> getOrdersByUserId(UUID userId) {
+        List<Order> orderRequests = orderRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("No orders found for user ID: " + userId));
+        log.info("Converting orders to order requests for user ID: {}", userId);
+        List<OrderDto> list = orderRequests.stream()
+                .map(order -> OrderDto.builder()
+                        .userId(order.getUserId())
+                        .paymentMethod(order.getPaymentMethod())
+                        .status(order.getStatus())
+                        .build())
+                .toList();
+        log.info("Order requests for user ID {}: {}", userId, list);
+        return list;
+    }
 }

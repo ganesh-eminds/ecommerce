@@ -84,7 +84,7 @@ public class ProductEventListener {
         PaymentOrderRequest paymentOrderRequest = new PaymentOrderRequest(
                 event.getOrderId(),
                 event.getUserId(),
-                couponValidationResponse.getDiscountedAmount() != null ? (totalPrice - couponValidationResponse.getDiscountedAmount().doubleValue()) : totalPrice,
+                couponValidationResponse.getDiscountedAmount() != null ? couponValidationResponse.getDiscountedAmount().doubleValue() : totalPrice,
                 PaymentStatus.PENDING,
                 event.getPaymentMethod()
         );

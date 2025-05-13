@@ -1,9 +1,9 @@
 package com.matrix.ecommerce.order.listeners;
 
 import com.matrix.ecommerce.dtos.dto.dto.*;
+import com.matrix.ecommerce.dtos.dto.dto.order.OrderStatus;
 import com.matrix.ecommerce.dtos.dto.dto.product.RestoreProduct;
 import com.matrix.ecommerce.order.entity.Order;
-import com.matrix.ecommerce.order.entity.OrderStatus;
 import com.matrix.ecommerce.order.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

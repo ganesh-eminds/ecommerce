@@ -1,5 +1,6 @@
 package com.matrix.ecommerce.order.controller;
 
+import com.matrix.ecommerce.dtos.dto.dto.order.OrderDto;
 import com.matrix.ecommerce.dtos.dto.dto.order.OrderRequest;
 import com.matrix.ecommerce.order.entity.Order;
 import com.matrix.ecommerce.order.service.OrderService;
@@ -49,6 +50,11 @@ public class OrderController {
     @PostMapping("/orders/by-ids")
     public List<OrderRequest> getOrdersByIds(@RequestBody Set<UUID> ids) {
         return orderService.getOrdersByIds(ids); // convert entity → DTO
+    }
+
+    @GetMapping("/orders/by-user/{userId}")
+    public ResponseEntity<List<OrderDto>> getOrdersByUserId(@PathVariable UUID userId) {
+        return ResponseEntity.ok(orderService.getOrdersByUserId(userId));
     }
 
 }

@@ -1,6 +1,9 @@
 package com.matrix.ecommerce.dtos.dto.dto.exception;
 
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExceptionDto {
     private String message;
     private String errorCode;
@@ -11,6 +14,12 @@ public class ExceptionDto {
         this.message = message;
         this.errorCode = errorCode;
         this.errorType = errorType;
+        this.errorDescription = errorDescription;
+    }
+
+    public ExceptionDto(String message, String errorCode, String errorDescription) {
+        this.message = message;
+        this.errorCode = errorCode;
         this.errorDescription = errorDescription;
     }
 

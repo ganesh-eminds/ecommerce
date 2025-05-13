@@ -3,6 +3,7 @@ package com.matrix.ecommerce.user.kafka;
 import com.matrix.ecommerce.dtos.dto.dto.BalanceUpdateEvent;
 import com.matrix.ecommerce.dtos.dto.dto.order.OrderCreatedEvent;
 import com.matrix.ecommerce.user.service.UserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @EnableKafka
 @RequiredArgsConstructor(onConstructor = @__({@Autowired}))
+@Transactional
 public class OrderEventListener {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final UserService userService;
@@ -34,6 +36,7 @@ public class OrderEventListener {
         log.info("Handling event for order ID: {}", event.getOrderId());
         //update orders in user service
         userService.updateOrder(event);
+        log.info("Order updated for order ID: {}", event.getOrderId());
     }
 
 }

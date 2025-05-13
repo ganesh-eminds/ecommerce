@@ -16,11 +16,4 @@ public class KafkaTopicConfig {
                 .build();
     }
 
-    @Bean
-    public NewTopic createOrderTopic() {
-        return TopicBuilder.name("order-created")
-                .partitions(10)
-                .replicas(1)
-                .build();
-    }
 }

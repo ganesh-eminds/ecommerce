@@ -1,6 +1,7 @@
 package com.matrix.ecommerce.order.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.matrix.ecommerce.dtos.dto.dto.order.OrderStatus;
 import com.matrix.ecommerce.dtos.dto.dto.payment.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
